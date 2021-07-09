@@ -12,8 +12,7 @@ class Handler extends ExceptionHandler
      *
      * @var array
      */
-    protected $dontReport = [
-        //
+    protected $dontReport = [//
     ];
 
     /**
@@ -22,14 +21,14 @@ class Handler extends ExceptionHandler
      * @var array
      */
     protected $dontFlash = [
-        'password',
-        'password_confirmation',
+        'password', 'password_confirmation',
     ];
 
     /**
      * Report or log an exception.
      *
      * @param  \Throwable  $exception
+     *
      * @return void
      *
      * @throws \Throwable
@@ -44,6 +43,7 @@ class Handler extends ExceptionHandler
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Throwable  $exception
+     *
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @throws \Throwable
