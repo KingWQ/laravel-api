@@ -11,6 +11,9 @@ class AuthTest extends TestCase
     use DatabaseTransactions;
 
     //测试正常注册逻辑
+    /**
+     * @group register
+     */
     public function testRegister()
     {
         $response = $this->post('wx/auth/register',[
