@@ -10,6 +10,8 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $table = 'user';
+    public const CREATED_AT = 'add_time';
+    public const UPDATED_AT = 'update_time';
 
     protected $fillable = [];
 

@@ -8,6 +8,7 @@ use App\Services\UserServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -26,31 +27,38 @@ class AuthController extends Controller
         if (!is_null($user)) {
             return ['errno' => 704, 'errmsg' => '用户名已注册'];
         }
+
+        $validator = Validator::make(['mobile' => $mobile], ['mobile' => 'regex:/^1[0-9]{10}$/']);
+        if ($validator->fails()) {
+            return ['errno' => 707, 'errmsg' => '手机号格式不正确'];
+        }
         $user = (new UserServices())->getByMobile($mobile);
         if (!is_null($user)) {
             return ['errno' => 705, 'errmsg' => '手机号已注册'];
-
         }
 
         // todo 验证验证码是否正确
         $avatarUrl = "https://yanxuan.nosdn.127.net/80841d741d7fa3073e0ae27bf487339f.jpg?imageView&quality=90&thumbnail=64x64";
 
         $user                  = new User();
-        $user->usename         = $username;
+        $user->username        = $username;
         $user->password        = Hash::make($password);
         $user->mobile          = $mobile;
         $user->avatar          = $avatarUrl;
         $user->nickname        = $username;
         $user->last_login_time = Carbon::now()->toDateString();
         $user->last_login_ip   = $request->getClientIp();
-        $user->add_time        = Carbon::now()->toDateString();
-        $user->update_time     = Carbon::now()->toDateString();
         $user->save();
+
         // todo 新用户发券
         return [
-            'errno' => 0, 'errmsg' => '成功', 'data' => [
-                'token' => '', 'userInfo' => [
-                    'nickName' => $username, 'avatarUrl' => $avatarUrl,
+            'errno'  => 0,
+            'errmsg' => '成功',
+            'data'   => [
+                'token'    => '',
+                'userInfo' => [
+                    'nickName'  => $username,
+                    'avatarUrl' => $avatarUrl,
                 ]
             ]
         ];
