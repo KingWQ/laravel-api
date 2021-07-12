@@ -1,10 +1,19 @@
-#### 单元测试编写
+#### 测试编写
 1. 数据不插入数据库    
 ```
 use DatabaseTransactions; 
 ```
+2. phpunit分为功能测试(Feature)和单元测试(Unit)
+    > Feature接口层面的测试, Unit函数层面的测试，改一下继承的TestCase
 
-#### 单元测试使用
+```
+# 生成feature
+php artisan make:test AuthTest
+# 生成unit
+php artisan make:test AuthTest --unit
+```
+
+#### 测试使用
 1. phpunit 是所有测试都执行
 2. phpunit 加命名空间 这个类的测试执行
 ```
