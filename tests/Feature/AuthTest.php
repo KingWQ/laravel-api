@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Services\UserServices;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -17,8 +18,9 @@ class AuthTest extends TestCase
      */
     public function testRegister()
     {
+        $code = (new UserServices())->setCaptcha('17828281233');
         $response = $this->post('wx/auth/register', [
-            'username' => 'huge2', 'password' => '123456', 'mobile' => '17828281233', 'code' => '1234'
+            'username' => 'huge2', 'password' => '123456', 'mobile' => '17828281233', 'code' => $code
         ]);
         $response->assertStatus(200);
         $ret = $response->getOriginalContent();

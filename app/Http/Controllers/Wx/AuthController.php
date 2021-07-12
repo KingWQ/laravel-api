@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Wx;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\UserServices;
 use Illuminate\Http\Request;
@@ -11,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class AuthController extends Controller
+class AuthController extends WxController
 {
     public function register(Request $request)
     {
@@ -39,7 +38,7 @@ class AuthController extends Controller
         }
 
         $isPass = (new UserServices())->checkCaptcha($mobile, $code);
-        if(!$isPass){
+        if (!$isPass) {
             return ['errno' => 703, 'errmsg' => '短信验证码不正确'];
         }
 
@@ -85,13 +84,13 @@ class AuthController extends Controller
         }
 
         $isPass = (new UserServices())->checkMobileSendCaptchaCount($mobile);
-        if(!$isPass){
+        if (!$isPass) {
             return ['errno' => 702, 'errmsg' => '验证码当天发送不能超过10次'];
         }
 
         $code = (new UserServices())->setCaptcha($mobile);
         (new UserServices())->sendCaptchaMsg($mobile, $code);
 
-        return ['errno' => 0, 'errmsg' => '成功', 'data'=>null];
+        return ['errno' => 0, 'errmsg' => '成功', 'data' => null];
     }
 }

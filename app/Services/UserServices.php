@@ -77,19 +77,13 @@ class UserServices
     }
 
     /**
-     * 验证验证码
-     *
-     * @param $mobile
-     * @param $code
-     *
+     * @param  string  $mobile
+     * @param  string  $code
      * @return bool
      */
     public function checkCaptcha(string $mobile, string $code)
     {
-        if (app()->environment('testing')) {
-            return true;
-        }
-        $key    = 'register_captcha_'.$mobile;
+        $key = 'register_captcha_'.$mobile;
         $isPass = $code === Cache::get($key);
         if ($isPass) {
             Cache::forget($key);
@@ -99,12 +93,8 @@ class UserServices
     }
 
     /**
-     * 发送短信验证码
-     *
-     * @param $mobile
-     * @param $code
-     *
-     * @return bool
+     * @param  string  $mobile
+     * @param  string  $code
      */
     public function sendCaptchaMsg(string $mobile, string $code)
     {

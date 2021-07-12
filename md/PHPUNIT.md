@@ -4,7 +4,7 @@
 use DatabaseTransactions; 
 ```
 2. phpunit分为功能测试(Feature)和单元测试(Unit)
-    > Feature接口层面的测试, Unit函数层面的测试，改一下继承的TestCase
+> Feature接口层面的测试, Unit函数层面的测试，改一下继承的TestCase
 
 ```
 # 生成feature
