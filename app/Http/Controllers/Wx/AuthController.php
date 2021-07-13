@@ -38,10 +38,7 @@ class AuthController extends WxController
             return $this->fail(CodeResponse::AUTH_MOBILE_REGISTERED);
         }
 
-        $isPass = (new UserServices())->checkCaptcha($mobile, $code);
-        if (!$isPass) {
-            return $this->fail(CodeResponse::AUTH_CAPTCHA_UNMATCH);
-        }
+       (new UserServices())->checkCaptcha($mobile, $code);
 
         $avatarUrl = "https://yanxuan.nosdn.127.net/80841d741d7fa3073e0ae27bf487339f.jpg?imageView&quality=90&thumbnail=64x64";
 
