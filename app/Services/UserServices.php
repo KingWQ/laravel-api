@@ -14,9 +14,7 @@ class UserServices
 {
     /**
      * 根据用户名获取用户
-     *
      * @param $username
-     *
      * @return User|null|Model
      */
     public function getByUsername($username)
@@ -26,9 +24,7 @@ class UserServices
 
     /**
      * 根据手机号获取用户
-     *
      * @param $mobile
-     *
      * @return User|null|Model
      */
     public function getByMobile($mobile)
@@ -38,9 +34,7 @@ class UserServices
 
     /**
      * 检查验证码每天发送的次数
-     *
-     * @param $mobile  手机号
-     *
+     * @param  string  $mobile
      * @return bool
      */
     public function checkMobileSendCaptchaCount(string $mobile)
@@ -61,10 +55,8 @@ class UserServices
 
     /**
      * 设置短信验证码
-     *
-     * @param $mobile
-     *
-     * @return string
+     * @param  string  $mobile
+     * @return int|string
      * @throws \Exception
      */
     public function setCaptcha(string $mobile)
@@ -77,6 +69,7 @@ class UserServices
     }
 
     /**
+     * 检查验证码
      * @param  string  $mobile
      * @param  string  $code
      * @return bool
@@ -93,6 +86,7 @@ class UserServices
     }
 
     /**
+     * 发送短信验证码
      * @param  string  $mobile
      * @param  string  $code
      */

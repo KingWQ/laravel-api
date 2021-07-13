@@ -41,7 +41,7 @@ class AuthTest extends TestCase
     public function testRegCaptcha()
     {
         $response = $this->post('wx/auth/regCaptcha', ['mobile' => '17828281233']);
-        $response->assertJson(['errno' => 0, 'errmsg' => '成功', 'data' => null]);
+        $response->assertJson(['errno' => 0, 'errmsg' => '成功']);
         $response = $this->post('wx/auth/regCaptcha', ['mobile' => '17828281233']);
         $response->assertJson(['errno' => 702, 'errmsg' => '验证码未超时1分钟，不能发送']);
     }
