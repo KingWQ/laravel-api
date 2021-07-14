@@ -7,6 +7,23 @@ use App\Http\Controllers\Controller;
 
 class WxController extends Controller
 {
+    protected $only;
+    protected $except;
+
+    public function __construct()
+    {
+        $option = [];
+        if(!is_null($this->only)){
+            $option['only'] = $this->only;
+        }
+        if(!is_null($this->except)){
+            $option['except'] = $this->except;
+        }
+
+        $this->middleware('auth:wx', $option);
+    }
+
+
     protected function codeReturn(array $codeResponse, $data = null, $info = '')
     {
         [$errno, $errmsg] = $codeResponse;

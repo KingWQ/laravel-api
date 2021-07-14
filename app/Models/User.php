@@ -16,7 +16,7 @@ class User extends Authenticatable implements JWTSubject
 
     protected $fillable = [];
 
-    protected $hidden = [];
+    protected $hidden = ['password','deleted'];
 
     protected $casts = [];
 
@@ -27,6 +27,9 @@ class User extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims()
     {
-        return [];
+        return [
+            'iss'=>env('JWT_ISSUER'),
+            'userId'=>$this->getKey(),
+        ];
     }
 }

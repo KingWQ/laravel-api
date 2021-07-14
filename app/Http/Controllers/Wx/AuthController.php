@@ -14,6 +14,15 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends WxController
 {
+    protected $only = ['user'];
+
+    public function user()
+    {
+        $user = Auth::guard('wx')->user();
+
+        return $this->success($user);
+    }
+
     public function login(Request $request)
     {
         $username = $request->input('username');

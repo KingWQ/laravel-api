@@ -64,4 +64,13 @@
             ]);
             $this->assertNotEmpty($response->getOriginalContent()['data']['token'] ?? '');
         }
+
+        public function testUser()
+        {
+            $response = $this->post('wx/auth/login', ['username' => 'user123','password'=>'user123']);
+            $token = $response->getOriginalContent()['data']['token'];
+            $response2 = $this->get('wx/auth/user',['Authorization'=>"Bearer {$token}"]);
+            $response2->assertJson(['data'=>['username'=>'user123']]);
+
+        }
     }
