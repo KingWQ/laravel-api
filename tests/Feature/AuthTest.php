@@ -49,4 +49,19 @@
             $response = $this->post('wx/auth/regCaptcha', ['mobile' => '17828281233']);
             $response->assertJson(['errno' => 702, 'errmsg' => '验证码未超时1分钟，不能发送']);
         }
+        public function testLogin()
+        {
+            $response = $this->post('wx/auth/login', ['username' => 'user123','password'=>'user123']);
+            $response->assertJson([
+                "errno" => 0,
+                "errmsg" => "成功",
+                "data" =>  [
+                    "userInfo" =>[
+                        "nickName" => "user123",
+                        "avatarUrl" => ""
+                    ]
+                ]
+            ]);
+            $this->assertNotEmpty($response->getOriginalContent()['data']['token'] ?? '');
+        }
     }
