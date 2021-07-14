@@ -14,15 +14,71 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends WxController
 {
-    protected $only = ['user'];
+    protected $only = ['info', 'profile'];
 
-    public function user()
+    /**
+     * 用户信息
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function info()
     {
-        $user = Auth::guard('wx')->user();
+        $user = $this->user();
 
-        return $this->success($user);
+        return $this->success([
+            'nickName' => $user->nickname,
+            'avatar'   => $user->avatar,
+            'gender'   => $user->gender,
+            'mobile'   => $user->mobile,
+        ]);
     }
 
+    /**
+     * 用户退出
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout()
+    {
+        Auth::guard('wx')->logout();
+
+        return $this->success();
+    }
+
+    /**
+     * 重置密码
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \App\Exceptions\BusinessException
+     */
+    public function reset(Request $request)
+    {
+        $password = $request->input('password');
+        $mobile = $request->input('mobile');
+        $code = $request->input('code');
+        if (empty($mobile) || empty($password) || empty($code)) {
+            return $this->fail(CodeResponse::PARAM_ILLEGAL);
+        }
+
+        $isPass = UserServices::getInstance()->checkCaptcha($mobile, $code);
+        if (!$isPass) {
+            return $this->fail(CodeResponse::AUTH_CAPTCHA_UNMATCH);
+        }
+
+        $user = UserServices::getInstance()->getByMobile($mobile);
+        if (is_null($user)) {
+            return $this->fail(CodeResponse::AUTH_MOBILE_UNREGISTERED);
+        }
+
+        $user->password = Hash::make($password);
+        $ret = $user->save();
+
+        return $this->failOrSuccess($ret, CodeResponse::UPDATED_FAIL);
+    }
+
+    /**
+     * 用户登录
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function login(Request $request)
     {
         $username = $request->input('username');
@@ -58,6 +114,12 @@ class AuthController extends WxController
         ]);
     }
 
+    /**
+     * 用户注册
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \App\Exceptions\BusinessException
+     */
     public function register(Request $request)
     {
         $username = $request->input('username');
@@ -107,6 +169,12 @@ class AuthController extends WxController
         ]);
     }
 
+    /**
+     * 用户注册验证码
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
+     */
     public function regCaptcha(Request $request)
     {
         $mobile = $request->input('mobile');
@@ -136,4 +204,31 @@ class AuthController extends WxController
 
         return $this->success();
     }
+
+    /**
+     * 更新用户资料
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function profile(Request $request)
+    {
+        $user = $this->user();
+        $avatar = $request->input('avatar');
+        $gender = $request->input('gender');
+        $nickname = $request->input('nickname');
+
+        if (!empty($avatar)) {
+            $user->avatar = $avatar;
+        }
+        if (!empty($gender)) {
+            $user->gender = $gender;
+        }
+        if (!empty($nickname)) {
+            $user->nickname = $nickname;
+        }
+
+        $ret = $user->save();
+        return $this->failOrSuccess($ret, CodeResponse::UPDATED_FAIL);
+    }
+
 }

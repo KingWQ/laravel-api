@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class WxController extends Controller
 {
@@ -13,10 +14,10 @@ class WxController extends Controller
     public function __construct()
     {
         $option = [];
-        if(!is_null($this->only)){
+        if (!is_null($this->only)) {
             $option['only'] = $this->only;
         }
-        if(!is_null($this->except)){
+        if (!is_null($this->except)) {
             $option['except'] = $this->except;
         }
 
@@ -35,14 +36,30 @@ class WxController extends Controller
         return response()->json($ret);
     }
 
-    protected function success($data=null)
+    protected function success($data = null)
     {
         return $this->codeReturn(CodeResponse::SUCCESS, $data);
     }
 
-    protected function fail(array $codeResponse=CodeResponse::FAIL, $info='')
+    protected function fail(array $codeResponse = CodeResponse::FAIL, $info = '')
     {
         return $this->codeReturn($codeResponse, null, $info);
+    }
+
+    protected function failOrSuccess($isSuccess, array $codeResponse = CodeResponse::FAIL, $data = null, $info = '')
+    {
+        if ($isSuccess){
+            return $this->success($data);
+        }
+        return $this->fail($codeResponse, $info);
+    }
+
+    /**
+     * @return User|null
+     */
+    public function user()
+    {
+        return Auth::guard('wx')->user();
     }
 
 }
