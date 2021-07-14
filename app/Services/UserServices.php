@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Notification;
 use Leonis\Notifications\EasySms\Channels\EasySmsChannel;
 use Overtrue\EasySms\PhoneNumber;
 
-class UserServices
+class UserServices extends BaseServices
 {
     /**
      * 根据用户名获取用户

@@ -14,7 +14,7 @@
         //测试正常注册逻辑
         public function testRegister()
         {
-            $code = (new UserServices())->setCaptcha('17828281233');
+            $code = UserServices::getInstance()->setCaptcha('17828281233');
             $response = $this->post('wx/auth/register', [
                 'username' => 'huge2', 'password' => '123456', 'mobile' => '17828281233', 'code' => $code
             ]);

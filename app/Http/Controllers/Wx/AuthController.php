@@ -24,7 +24,7 @@ class AuthController extends WxController
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
         }
 
-        $user = (new UserServices())->getByUsername($username);
+        $user = UserServices::getInstance()->getByUsername($username);
         if (!is_null($user)) {
             return $this->fail(CodeResponse::AUTH_NAME_REGISTERED);
         }
@@ -33,12 +33,12 @@ class AuthController extends WxController
         if ($validator->fails()) {
             return $this->fail(CodeResponse::AUTH_INVALID_MOBILE);
         }
-        $user = (new UserServices())->getByMobile($mobile);
+        $user = UserServices::getInstance()->getByMobile($mobile);
         if (!is_null($user)) {
             return $this->fail(CodeResponse::AUTH_MOBILE_REGISTERED);
         }
 
-       (new UserServices())->checkCaptcha($mobile, $code);
+        UserServices::getInstance()->checkCaptcha($mobile, $code);
 
         $avatarUrl = "https://yanxuan.nosdn.127.net/80841d741d7fa3073e0ae27bf487339f.jpg?imageView&quality=90&thumbnail=64x64";
 
@@ -71,7 +71,7 @@ class AuthController extends WxController
             return $this->fail(CodeResponse::AUTH_INVALID_MOBILE);
         }
 
-        $user = (new UserServices())->getByMobile($mobile);
+        $user = UserServices::getInstance()->getByMobile($mobile);
         if (!is_null($user)) {
             return $this->fail(CodeResponse::AUTH_MOBILE_REGISTERED);
         }
@@ -81,13 +81,13 @@ class AuthController extends WxController
             return $this->fail(CodeResponse::AUTH_CAPTCHA_FREQUENCY);
         }
 
-        $isPass = (new UserServices())->checkMobileSendCaptchaCount($mobile);
+        $isPass = UserServices::getInstance()->checkMobileSendCaptchaCount($mobile);
         if (!$isPass) {
             return $this->fail(CodeResponse::AUTH_CAPTCHA_FREQUENCY,'验证码当天发送不能超过10次');
         }
 
-        $code = (new UserServices())->setCaptcha($mobile);
-        (new UserServices())->sendCaptchaMsg($mobile, $code);
+        $code = UserServices::getInstance()->setCaptcha($mobile);
+        UserServices::getInstance()->sendCaptchaMsg($mobile, $code);
 
         return $this->success();
     }
