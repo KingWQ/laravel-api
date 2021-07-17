@@ -25,7 +25,7 @@ class AuthTest extends TestCase
         $this->assertNotEmpty($ret['data']);
     }
 
-    public function testRegisterErrCOde()
+    public function testRegisterErrCode()
     {
         $response = $this->post('wx/auth/register', [
             'username' => 'huge3', 'password' => '123456', 'mobile' => '17828281233', 'code' => '1234'

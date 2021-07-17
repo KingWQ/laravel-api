@@ -45,15 +45,15 @@ class AuthController extends WxController
 
     /**
      * 重置密码
-     * @param  Request  $request
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \App\Exceptions\BusinessException
      */
     public function reset(Request $request)
     {
         $password = $request->input('password');
-        $mobile = $request->input('mobile');
-        $code = $request->input('code');
+        $mobile   = $request->input('mobile');
+        $code     = $request->input('code');
         if (empty($mobile) || empty($password) || empty($code)) {
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
         }
@@ -69,14 +69,14 @@ class AuthController extends WxController
         }
 
         $user->password = Hash::make($password);
-        $ret = $user->save();
+        $ret            = $user->save();
 
         return $this->failOrSuccess($ret, CodeResponse::UPDATED_FAIL);
     }
 
     /**
      * 用户登录
-     * @param  Request  $request
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
@@ -98,7 +98,7 @@ class AuthController extends WxController
         }
 
         $user->last_login_time = now()->toDateString();
-        $user->last_login_ip = $request->getClientIp();
+        $user->last_login_ip   = $request->getClientIp();
         if (!$user->save()) {
             return $this->fail(CodeResponse::UPDATED_FAIL);
         }
@@ -116,7 +116,7 @@ class AuthController extends WxController
 
     /**
      * 用户注册
-     * @param  Request  $request
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \App\Exceptions\BusinessException
      */
@@ -124,8 +124,8 @@ class AuthController extends WxController
     {
         $username = $request->input('username');
         $password = $request->input('password');
-        $mobile = $request->input('mobile');
-        $code = $request->input('code');
+        $mobile   = $request->input('mobile');
+        $code     = $request->input('code');
 
         if (empty($username) || empty($password) || empty($mobile) || empty($code)) {
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
@@ -149,14 +149,14 @@ class AuthController extends WxController
 
         $avatarUrl = "https://yanxuan.nosdn.127.net/80841d741d7fa3073e0ae27bf487339f.jpg?imageView&quality=90&thumbnail=64x64";
 
-        $user = new User();
-        $user->username = $username;
-        $user->password = Hash::make($password);
-        $user->mobile = $mobile;
-        $user->avatar = $avatarUrl;
-        $user->nickname = $username;
+        $user                  = new User();
+        $user->username        = $username;
+        $user->password        = Hash::make($password);
+        $user->mobile          = $mobile;
+        $user->avatar          = $avatarUrl;
+        $user->nickname        = $username;
         $user->last_login_time = Carbon::now()->toDateString();
-        $user->last_login_ip = $request->getClientIp();
+        $user->last_login_ip   = $request->getClientIp();
         $user->save();
 
         // todo 新用户发券
@@ -164,14 +164,15 @@ class AuthController extends WxController
         return $this->success([
             'token'    => '',
             'userInfo' => [
-                'nickName' => $username, 'avatarUrl' => $avatarUrl,
+                'nickName'  => $username,
+                'avatarUrl' => $avatarUrl,
             ]
         ]);
     }
 
     /**
      * 用户注册验证码
-     * @param  Request  $request
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      */
@@ -189,7 +190,7 @@ class AuthController extends WxController
             return $this->fail(CodeResponse::AUTH_MOBILE_REGISTERED);
         }
 
-        $lock = Cache::add('register_captcha_lock_'.$mobile, 1, 60);
+        $lock = Cache::add('register_captcha_lock_' . $mobile, 1, 60);
         if (!$lock) {
             return $this->fail(CodeResponse::AUTH_CAPTCHA_FREQUENCY);
         }
@@ -207,14 +208,14 @@ class AuthController extends WxController
 
     /**
      * 更新用户资料
-     * @param  Request  $request
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function profile(Request $request)
     {
-        $user = $this->user();
-        $avatar = $request->input('avatar');
-        $gender = $request->input('gender');
+        $user     = $this->user();
+        $avatar   = $request->input('avatar');
+        $gender   = $request->input('gender');
         $nickname = $request->input('nickname');
 
         if (!empty($avatar)) {
@@ -228,6 +229,7 @@ class AuthController extends WxController
         }
 
         $ret = $user->save();
+
         return $this->failOrSuccess($ret, CodeResponse::UPDATED_FAIL);
     }
 
