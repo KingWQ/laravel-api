@@ -27,4 +27,11 @@ class AddressTest extends TestCase
         $this->assertEmpty($address);
     }
 
+    public function testDetail()
+    {
+        $response = $this->get('wx/address/detail?id=1',$this->getAuthHeader());
+        $response->assertJson(['errno'=>0]);
+    }
+
+
 }

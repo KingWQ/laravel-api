@@ -28,3 +28,7 @@ Route::get('address/list', 'AddressController@list');           //收货地址�
 Route::get('address/detail', 'AddressController@detail');       //收货地址详情
 Route::post('address/save', 'AddressController@save');          //收货地址保存
 Route::post('address/delete', 'AddressController@delete');      //收货地址删除
+
+# 商品模块-分类
+Route::get('category/index', 'CategoryController@index');
+Route::get('category/current', 'CategoryController@current');

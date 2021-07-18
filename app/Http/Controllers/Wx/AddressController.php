@@ -33,9 +33,14 @@ class AddressController extends WxController
         ]);
     }
 
-    public function detail()
+    public function detail(Request $request)
     {
-
+        $id = $request->input('id', 0);
+        if (empty($id) && is_numeric($id)) {
+            return $this->fail(CodeResponse::PARAM_ILLEGAL);
+        }
+        $address = AddressServices::getInstance()->detail($this->user()->id, $id);
+        return $this->success($address);
     }
 
     public function save()
@@ -46,11 +51,11 @@ class AddressController extends WxController
     public function delete(Request $request)
     {
         $id = $request->input('id', 0);
-        if(empty($id) && is_numeric($id)){
+        if (empty($id) && is_numeric($id)) {
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
         }
-
         AddressServices::getInstance()->delete($this->user()->id, $id);
+
         return $this->success();
     }
 

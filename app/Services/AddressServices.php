@@ -31,4 +31,13 @@ class AddressServices extends BaseServices
         }
         return $address->delete();
     }
+
+    public function detail($userId, $addressId)
+    {
+        $address = $this->getAddress($userId, $addressId);
+        if(is_null($address)){
+            $this->throwBusinessException(CodeResponse::PARAM_ILLEGAL);
+        }
+        return $address;
+    }
 }
