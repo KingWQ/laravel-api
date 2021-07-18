@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+
 class BaseServices
 {
     protected static $instance;
@@ -25,6 +27,11 @@ class BaseServices
 
     private function __clone()
     {
+    }
+
+    protected function throwBusinessException(array $codeResponse)
+    {
+        throw new BusinessException($codeResponse);
     }
 }
 
