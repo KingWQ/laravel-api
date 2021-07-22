@@ -3,27 +3,14 @@
 namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
-use App\Models\Address;
-use App\Services\AddressServices;
+use App\Services\User\AddressServices;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class AddressController extends WxController
 {
     public function list()
     {
         $list = AddressServices::getInstance()->getAddressListByUserId($this->user()->id);
-        $list = $list->map(function (Address $address) {
-            $address = $address->toArray();
-            $item    = [];
-            foreach ($address as $key => $value) {
-                $key        = lcfirst(Str::studly($key));
-                $item[$key] = $value;
-            }
-
-            return $item;
-        });
-
         return $this->success([
             'total' => $list->count(),
             'page'  => 1,

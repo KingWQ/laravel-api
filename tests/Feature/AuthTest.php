@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\UserServices;
+use App\Services\User\UserServices;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -60,7 +60,7 @@ class AuthTest extends TestCase
             "data"   => [
                 "userInfo" => [
                     "nickName"  => "user123",
-                    "avatarUrl" => ""
+                    "avatarUrl" => "https://yanxuan.nosdn.127.net/80841d741d7fa3073e0ae27bf487339f.jpg?imageView&quality=90&thumbnail=64x64"
                 ]
             ]
         ]);
@@ -69,9 +69,7 @@ class AuthTest extends TestCase
 
     public function testInfo()
     {
-        $response = $this->post('wx/auth/login', ['username' => 'user123', 'password' => 'user123']);
-        $token = $response->getOriginalContent()['data']['token'];
-        $response2 = $this->get('wx/auth/info', ['Authorization' => "Bearer {$token}"]);
+        $response2 = $this->get('wx/auth/info', $this->getAuthHeader());
         $user = UserServices::getInstance()->getByUsername('user123');
         $response2->assertJson([
             'data' => [

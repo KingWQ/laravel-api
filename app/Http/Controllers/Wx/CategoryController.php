@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
-use App\Services\CategoryServices;
+use App\Services\Goods\CategoryServices;
 use Illuminate\Http\Request;
 
 class CategoryController extends WxController
@@ -12,7 +12,7 @@ class CategoryController extends WxController
 
     public function index(Request $request)
     {
-        $id = $request->input('id','');
+        $id = $request->input('id',0);
         $categoryList = CategoryServices::getInstance()->getL1List();
 
         if(empty($id)){
@@ -31,7 +31,7 @@ class CategoryController extends WxController
 
     public function current(Request $request)
     {
-        $id = $request->input('id','');
+        $id = $request->input('id',0);
         if(empty($id)){
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
         }

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Goods;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\BaseModel;
 
-class Category extends Model
+class Category extends BaseModel
 {
     protected $table = 'category';
     public const CREATED_AT = 'add_time';
@@ -15,7 +15,7 @@ class Category extends Model
     protected $hidden = [];
 
     protected $casts = [
-
+        'deleted'=>'boolean'
     ];
 
 }

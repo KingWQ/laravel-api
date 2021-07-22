@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
-use App\Models\User;
-use App\Services\UserServices;
+use App\Models\User\User;
+use App\Services\User\UserServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
