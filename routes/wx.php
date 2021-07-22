@@ -32,3 +32,7 @@ Route::post('address/delete', 'AddressController@delete');      //收货地址�
 # 商品模块-分类
 Route::get('category/index', 'CategoryController@index');
 Route::get('category/current', 'CategoryController@current');
+
+# 商品模块-品牌
+Route::get('brand/detail', 'BrandController@detail');
+Route::get('brand/list', 'BrandController@list');
