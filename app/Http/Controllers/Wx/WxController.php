@@ -67,18 +67,27 @@ class WxController extends Controller
         return $this->fail($codeResponse, $info);
     }
 
-    /**
-     * @return User|null
-     */
+
+    //登录用户
     public function user()
     {
         return Auth::guard('wx')->user();
     }
 
+    //登录用户id
+    public function userId()
+    {
+        return $this->user()->getAuthIdentifier();
+    }
 
-    /**
-     * 自定义分页返回数据格式
-     */
+    //是否登录
+    public function isLogin()
+    {
+        return !is_null($this->user());
+    }
+
+
+    //自定义分页返回数据格式
     protected function paginate($page)
     {
         if ($page instanceof LengthAwarePaginator) {

@@ -23,7 +23,7 @@ class CategoryController extends WxController
 
         $currentSubCategory = null;
         if(!$currentCategory){
-            $currentSubCategory = CategoryServices::getInstance()->getL2ListDataByPid($currentCategory->id);
+            $currentSubCategory = CategoryServices::getInstance()->getL2ListByPid($currentCategory->id);
         }
 
         return $this->success(compact('currentCategory', 'categoryList', 'currentSubCategory'));
@@ -42,7 +42,7 @@ class CategoryController extends WxController
             return $this->fail(CodeResponse::PARAM_NOT_EMPTY, '参数值不对');
         }
 
-        $currentSubCategory = CategoryServices::getInstance()->getL2ListDataByPid($currentCategory->id);
+        $currentSubCategory = CategoryServices::getInstance()->getL2ListByPid($currentCategory->id);
 
         return $this->success(compact('currentCategory',  'currentSubCategory'));
 
