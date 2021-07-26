@@ -29,6 +29,7 @@ class BaseModel extends Model
     }
 
 
+    //在toArray的时候调用
     public function serializeDate(DateTimeInterface $date)
     {
         return Carbon::instance($date)->toDateTimeString();

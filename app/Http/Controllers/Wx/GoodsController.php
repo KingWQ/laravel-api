@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
 use App\Constant;
+use App\Services\CollectServices;
+use App\Services\CommentServices;
+use App\Services\Goods\BrandServices;
 use App\Services\Goods\CategoryServices;
 use App\Services\Goods\GoodsServices;
 use App\Services\SearchHistoryServices;
@@ -13,6 +16,7 @@ class GoodsController extends WxController
 {
     protected $only = [];
 
+    //商品列表
     public function list(Request $request)
     {
         $categoryId = $request->input('categoryId');
@@ -31,19 +35,61 @@ class GoodsController extends WxController
             SearchHistoryServices::getInstance()->save($this->userId(), $keyword, Constant::SEARCH_HISTORY_FROM_WX);
         }
 
-        $columns = ['id','name','brief','pic_url','is_new','is_hot','counter_price','retail_price'];
+        $columns   = ['id', 'name', 'brief', 'pic_url', 'is_new', 'is_hot', 'counter_price', 'retail_price'];
         $goodsList = GoodsServices::getInstance()
-            ->listGoods($categoryId, $brandId, $isNew, $isHot, $keyword,$columns, $sort, $order, $page, $limit);
+            ->listGoods($categoryId, $brandId, $isNew, $isHot, $keyword, $columns, $sort, $order, $page, $limit);
 
         $categoryList = GoodsServices::getInstance()->list2Category($brandId, $isNew, $isHot, $keyword);
 
-        $goodsList = $this->paginate($goodsList);
+        $goodsList                       = $this->paginate($goodsList);
         $goodsList['filterCategoryList'] = $categoryList;
+
         return $this->success($goodsList);
     }
 
+    //商品详情
     public function detail(Request $request)
     {
+        $id = $request->input('id', 0);
+        if (empty($id)) {
+            return $this->fail(CodeResponse::PARAM_ILLEGAL);
+        }
+        $info = GoodsServices::getInstance()->getGoods($id);
+        if (empty($info)) {
+            return $this->fail(CodeResponse::PARAM_NOT_EMPTY);
+        }
+
+        $attr    = GoodsServices::getInstance()->getGoodsAttribute($id);
+        $spec    = GoodsServices::getInstance()->getGoodsSpecification($id);
+        $product = GoodsServices::getInstance()->getGoodsProduct($id);
+        $issue   = GoodsServices::getInstance()->getGoodsIssue();
+        $brand   = $info->brand_id ? BrandServices::getInstance()->getBrand($info->brand_id) : (object)[];
+        $comment = CommentServices::getInstance()->getCommentWithUserInfo($id);
+
+        $userHasCollect = 0;
+        if ($this->isLogin()) {
+            //用户是否收藏该商品
+            $userHasCollect = CollectServices::getInstance()->countByGoodsId($this->userId(), $id);
+
+            //记录用户的足迹，异步处理
+            GoodsServices::getInstance()->saveFootprint($this->userId(), $id);
+        }
+        //todo 团购信息
+        //todo 系统配置
+
+        return $this->success([
+            'info'              => $info,
+            'userHasCollect'    => $userHasCollect,
+            'issue'             => $issue,
+            'comment'           => $comment,
+            'specificationList' => $spec,
+            'productList'       => $product,
+            'attribute'         => $attr,
+            'brand'             => $brand,
+            'groupon'           => [],
+            'share'             => false,
+            'shareImage'        => $info->share_url,
+        ]);
     }
 
 

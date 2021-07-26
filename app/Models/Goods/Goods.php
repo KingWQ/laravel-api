@@ -7,8 +7,6 @@ use App\Models\BaseModel;
 class Goods extends BaseModel
 {
     protected $table = 'goods';
-    public const CREATED_AT = 'add_time';
-    public const UPDATED_AT = 'update_time';
 
     protected $fillable = [];
 
@@ -20,6 +18,8 @@ class Goods extends BaseModel
         'is_hot'        => 'boolean',
         'counter_price' => 'float',
         'retail_price'  => 'float',
+        'is_on_sale'    => 'boolean',
+        'gallery'       => 'array',
     ];
 
 }
