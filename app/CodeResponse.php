@@ -8,7 +8,7 @@ class  CodeResponse
     const SUCCESS         = [0, '成功'];
     const FAIL            = [-1, 'fail'];
     const PARAM_ILLEGAL   = [401, '参数不合法'];
-    const PARAM_NOT_EMPTY = [402, 'arg0must not be null'];
+    const PARAM_NOT_EMPTY = [402, '参数值不对'];
     const UN_LOGIN        = [501, '未登录'];
     const SYSTEM_ERROR    = [502, '系统内部错误'];
     const UPDATED_FAIL    = [505, '数据更新失败'];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
 use App\Constant;
+use App\Inputs\GoodsListInput;
 use App\Services\CollectServices;
 use App\Services\CommentServices;
 use App\Services\Goods\BrandServices;
@@ -17,29 +18,18 @@ class GoodsController extends WxController
     protected $only = [];
 
     //商品列表
-    public function list(Request $request)
+    public function list()
     {
-        $categoryId = $request->input('categoryId');
-        $brandId    = $request->input('brandId');
-        $keyword    = $request->input('keyword');
-        $isNew      = $request->input('isNew');
-        $isHot      = $request->input('isHot');
-        $page       = $request->input('page', 1);
-        $limit      = $request->input('limit', 10);
-        $sort       = $request->input('sort', 'add_time');
-        $order      = $request->input('order', 'desc');
+        $input = GoodsListInput::new();
 
-        //todo 验证参数
 
         if ($this->isLogin() && !empty($keyword)) {
             SearchHistoryServices::getInstance()->save($this->userId(), $keyword, Constant::SEARCH_HISTORY_FROM_WX);
         }
 
         $columns   = ['id', 'name', 'brief', 'pic_url', 'is_new', 'is_hot', 'counter_price', 'retail_price'];
-        $goodsList = GoodsServices::getInstance()
-            ->listGoods($categoryId, $brandId, $isNew, $isHot, $keyword, $columns, $sort, $order, $page, $limit);
-
-        $categoryList = GoodsServices::getInstance()->list2Category($brandId, $isNew, $isHot, $keyword);
+        $goodsList = GoodsServices::getInstance()->listGoods($input,$columns);
+        $categoryList = GoodsServices::getInstance()->list2Category($input);
 
         $goodsList                       = $this->paginate($goodsList);
         $goodsList['filterCategoryList'] = $categoryList;
@@ -50,7 +40,7 @@ class GoodsController extends WxController
     //商品详情
     public function detail(Request $request)
     {
-        $id = $request->input('id', 0);
+        $id = $this->verifyId('id', 0);
         if (empty($id)) {
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
         }
@@ -104,7 +94,7 @@ class GoodsController extends WxController
     //获取商品分类的数据
     public function category(Request $request)
     {
-        $id = $request->input('id', 0);
+        $id = $this->verifyId('id', 0);
         if (empty($id)) {
             return $this->fail(CodeResponse::PARAM_NOT_EMPTY);
         }

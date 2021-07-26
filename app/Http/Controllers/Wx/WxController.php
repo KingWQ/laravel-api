@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
 use App\Http\Controllers\Controller;
+use App\ValidateRequest;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
+
 class WxController extends Controller
 {
+    use ValidateRequest;
+
     protected $only;
     protected $except;
 
