@@ -10,7 +10,6 @@ class EventServiceProvider extends ServiceProvider
 {
     /**
      * The event listener mappings for the application.
-     *
      * @var array
      */
     protected $listen = [
@@ -21,7 +20,6 @@ class EventServiceProvider extends ServiceProvider
 
     /**
      * Register any events for your application.
-     *
      * @return void
      */
     public function boot()

@@ -44,10 +44,11 @@ class GoodsServices extends BaseServices
     }
 
     //保存用户浏览商品足迹
-    public function saveFootprint($userId,$goodsId)
+    public function saveFootprint($userId, $goodsId)
     {
         $footPrint = new Footprint();
-        $footPrint->fill(['user_id'=>$userId,'goods_id'=>$goodsId]);
+        $footPrint->fill(['user_id' => $userId, 'goods_id' => $goodsId]);
+
         return $footPrint->save();
     }
 
@@ -58,7 +59,8 @@ class GoodsServices extends BaseServices
         return Goods::query()->where('is_on_sale', 1)->where('deleted', 0)->count('id');
     }
 
-    public function listGoods(GoodsListInput $input, $columns) {
+    public function listGoods(GoodsListInput $input, $columns)
+    {
         $query = $this->getQueryByGoodsFilter($input);
 
         if (!empty($categoryId)) {

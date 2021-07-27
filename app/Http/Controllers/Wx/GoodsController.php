@@ -27,8 +27,8 @@ class GoodsController extends WxController
             SearchHistoryServices::getInstance()->save($this->userId(), $keyword, Constant::SEARCH_HISTORY_FROM_WX);
         }
 
-        $columns   = ['id', 'name', 'brief', 'pic_url', 'is_new', 'is_hot', 'counter_price', 'retail_price'];
-        $goodsList = GoodsServices::getInstance()->listGoods($input,$columns);
+        $columns      = ['id', 'name', 'brief', 'pic_url', 'is_new', 'is_hot', 'counter_price', 'retail_price'];
+        $goodsList    = GoodsServices::getInstance()->listGoods($input, $columns);
         $categoryList = GoodsServices::getInstance()->list2Category($input);
 
         $goodsList                       = $this->paginate($goodsList);

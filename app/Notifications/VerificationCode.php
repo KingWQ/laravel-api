@@ -13,9 +13,9 @@ class VerificationCode extends Notification
 {
     use Queueable;
     private $code;
+
     /**
      * Create a new notification instance.
-     *
      * @return void
      */
     public function __construct($code)
@@ -25,8 +25,7 @@ class VerificationCode extends Notification
 
     /**
      * Get the notification's delivery channels.
-     *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
@@ -36,27 +35,24 @@ class VerificationCode extends Notification
 
     /**
      * Get the mail representation of the notification.
-     *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
      */
     public function toEasySms($notifiable)
     {
-        return (new EasySmsMessage())
-            ->setTemplate('SMS_001')
-            ->setData(['code' => $this->code, 'product'=>'laravel-api']);
+        return (new EasySmsMessage())->setTemplate('SMS_001')->setData(['code'    => $this->code,
+                                                                        'product' => 'laravel-api'
+            ]);
     }
 
     /**
      * Get the array representation of the notification.
-     *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)
     {
-        return [
-            //
+        return [//
         ];
     }
 }

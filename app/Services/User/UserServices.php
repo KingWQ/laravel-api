@@ -17,7 +17,10 @@ class UserServices extends BaseServices
 {
     public function getUsers(array $userIds)
     {
-        if(empty($userIds)) return collect([]);
+        if (empty($userIds)) {
+            return collect([]);
+        }
+
         return User::query()->whereIn('id', $userIds)->get();
     }
 
@@ -43,12 +46,12 @@ class UserServices extends BaseServices
 
     /**
      * 检查验证码每天发送的次数
-     * @param  string  $mobile
+     * @param string $mobile
      * @return bool
      */
     public function checkMobileSendCaptchaCount(string $mobile)
     {
-        $countKey = 'register_captcha_count'.$mobile;
+        $countKey = 'register_captcha_count' . $mobile;
         if (Cache::has($countKey)) {
             $count = Cache::increment($countKey);
             if ($count > 10) {
@@ -64,7 +67,7 @@ class UserServices extends BaseServices
 
     /**
      * 设置短信验证码
-     * @param  string  $mobile
+     * @param string $mobile
      * @return int|string
      * @throws \Exception
      */
@@ -72,21 +75,21 @@ class UserServices extends BaseServices
     {
         $code = random_int(100000, 999999);
         $code = strval($code);
-        Cache::put('register_captcha_'.$mobile, $code, 600);
+        Cache::put('register_captcha_' . $mobile, $code, 600);
 
         return $code;
     }
 
     /**
      * 检查验证码
-     * @param  string  $mobile
-     * @param  string  $code
+     * @param string $mobile
+     * @param string $code
      * @return bool
      * @throws BusinessException
      */
     public function checkCaptcha(string $mobile, string $code)
     {
-        $key = 'register_captcha_'.$mobile;
+        $key    = 'register_captcha_' . $mobile;
         $isPass = $code === Cache::get($key);
         if ($isPass) {
             Cache::forget($key);
@@ -99,15 +102,14 @@ class UserServices extends BaseServices
 
     /**
      * 发送短信验证码
-     * @param  string  $mobile
-     * @param  string  $code
+     * @param string $mobile
+     * @param string $code
      */
     public function sendCaptchaMsg(string $mobile, string $code)
     {
         if (app()->environment('testing')) {
             return;
         }
-        Notification::route(EasySmsChannel::class,
-            new PhoneNumber($mobile, 86))->notify(new VerificationCode($code));
+        Notification::route(EasySmsChannel::class, new PhoneNumber($mobile, 86))->notify(new VerificationCode($code));
     }
 }

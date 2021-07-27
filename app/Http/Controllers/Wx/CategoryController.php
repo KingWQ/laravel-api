@@ -12,17 +12,17 @@ class CategoryController extends WxController
 
     public function index(Request $request)
     {
-        $id = $request->input('id',0);
+        $id           = $request->input('id', 0);
         $categoryList = CategoryServices::getInstance()->getL1List();
 
-        if(empty($id)){
+        if (empty($id)) {
             $currentCategory = $categoryList->first();
-        }else{
+        } else {
             $currentCategory = $categoryList->where('id', $id)->first();
         }
 
         $currentSubCategory = null;
-        if(!$currentCategory){
+        if (!$currentCategory) {
             $currentSubCategory = CategoryServices::getInstance()->getL2ListByPid($currentCategory->id);
         }
 
@@ -31,11 +31,11 @@ class CategoryController extends WxController
 
     public function current(Request $request)
     {
-        $id = $request->input('id',0);
-        if(empty($id)){
+        $id = $request->input('id', 0);
+        if (empty($id)) {
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
         }
-        $categoryList = CategoryServices::getInstance()->getL1List();
+        $categoryList    = CategoryServices::getInstance()->getL1List();
         $currentCategory = $categoryList->where('id', $id)->first();
 
         if (empty($currentCategory)) {
@@ -44,7 +44,7 @@ class CategoryController extends WxController
 
         $currentSubCategory = CategoryServices::getInstance()->getL2ListByPid($currentCategory->id);
 
-        return $this->success(compact('currentCategory',  'currentSubCategory'));
+        return $this->success(compact('currentCategory', 'currentSubCategory'));
 
     }
 

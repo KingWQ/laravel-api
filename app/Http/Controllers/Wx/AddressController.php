@@ -11,6 +11,7 @@ class AddressController extends WxController
     public function list()
     {
         $list = AddressServices::getInstance()->getAddressListByUserId($this->user()->id);
+
         return $this->successPaginate($list);
     }
 
@@ -21,6 +22,7 @@ class AddressController extends WxController
             return $this->fail(CodeResponse::PARAM_ILLEGAL);
         }
         $address = AddressServices::getInstance()->detail($this->user()->id, $id);
+
         return $this->success($address);
     }
 

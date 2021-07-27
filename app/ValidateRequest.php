@@ -35,7 +35,7 @@ trait ValidateRequest
 
     private function verifyData($key, $default, $rule)
     {
-        $value    = request()->input($key, $default);
+        $value = request()->input($key, $default);
         if (is_null($value) && is_null($default)) {
             return null;
         }

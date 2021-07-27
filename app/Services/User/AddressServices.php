@@ -10,12 +10,12 @@ class AddressServices extends BaseServices
 {
     public function getAddressListByUserId(int $userId)
     {
-        return Address::query()->where('user_id', $userId)->where('deleted', 0)->get();
+        return Address::query()->where('user_id', $userId)->get();
     }
 
     public function getAddress($userId, $addressId)
     {
-        return Address::query()->where('user_id', $userId)->where('id',$addressId)->where('deleted',0)->first();
+        return Address::query()->where('user_id', $userId)->where('id', $addressId)->first();
     }
 
     /**
@@ -27,18 +27,20 @@ class AddressServices extends BaseServices
     public function delete($userId, $addressId)
     {
         $address = $this->getAddress($userId, $addressId);
-        if(is_null($address)){
+        if (is_null($address)) {
             $this->throwBusinessException(CodeResponse::PARAM_ILLEGAL);
         }
+
         return $address->delete();
     }
 
     public function detail($userId, $addressId)
     {
         $address = $this->getAddress($userId, $addressId);
-        if(is_null($address)){
+        if (is_null($address)) {
             $this->throwBusinessException(CodeResponse::PARAM_ILLEGAL);
         }
+
         return $address;
     }
 }
