@@ -42,3 +42,7 @@ Route::get('goods/count', 'GoodsController@count');             //统计商品�
 Route::get('goods/category', 'GoodsController@category');       //根据分类获取商品列表数据
 Route::get('goods/list', 'GoodsController@list');               //获得商品列表
 Route::get('goods/detail', 'GoodsController@detail');           //获取商品的详情
+
+Route::get('coupon/list', 'CouponController@list');             //优惠券列表
+Route::get('coupon/mylist', 'CouponController@mylist');         //我的优惠券列表
+Route::post('coupon/receive', 'CouponController@receive');      //优惠券领取

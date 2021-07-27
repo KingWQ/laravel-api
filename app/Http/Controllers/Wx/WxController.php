@@ -92,15 +92,16 @@ class WxController extends Controller
 
 
     //自定义分页返回数据格式
-    protected function paginate($page)
+    protected function paginate($page, $list=null)
     {
         if ($page instanceof LengthAwarePaginator) {
+            $total = $page->total();
             return [
-                'total' => $page->total(),
-                'page'  => $page->currentPage(),
+                'total' => $total == 0 ? 0 : $page->total(),
+                'page'  => $total == 0 ? 0 : $page->currentPage(),
                 'limit' => $page->perPage(),
-                'pages' => $page->lastPage(),
-                'list'  => $page->items(),
+                'pages' => $total == 0 ? 0 : $page->lastPage(),
+                'list'  => $list ?? $page->items(),
             ];
         }
 
@@ -112,11 +113,12 @@ class WxController extends Controller
             return $page;
         }
 
+        $total = count($page);
         return [
-            'total' => count($page),
-            'page'  => 1,
-            'limit' => count($page),
-            'pages' => 1,
+            'total' => $total,
+            'page'  => $total==0 ? 0 : 1,
+            'limit' => $total,
+            'pages' => $total==0 ? 0 : 1,
             'list'  => $page,
         ];
     }

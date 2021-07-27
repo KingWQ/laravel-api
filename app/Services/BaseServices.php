@@ -14,10 +14,11 @@ class BaseServices
      */
     public static function getInstance()
     {
-        if(static::$instance instanceof static){
+        if (static::$instance instanceof static) {
             return static::$instance;
         }
         static::$instance = new static();
+
         return static::$instance;
     }
 
@@ -29,9 +30,9 @@ class BaseServices
     {
     }
 
-    protected function throwBusinessException(array $codeResponse)
+    protected function throwBusinessException(array $codeResponse, $msg = '')
     {
-        throw new BusinessException($codeResponse);
+        throw new BusinessException($codeResponse, $msg);
     }
 }
 
