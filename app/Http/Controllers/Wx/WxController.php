@@ -61,6 +61,14 @@ class WxController extends Controller
     {
         return $this->codeReturn($codeResponse, null, $info);
     }
+    protected function badArgument()
+    {
+        return $this->fail(CodeResponse::PARAM_ILLEGAL);
+    }
+    protected function badArgumentValue()
+    {
+        return $this->fail(CodeResponse::PARAM_NOT_EMPTY);
+    }
 
     protected function failOrSuccess($isSuccess, array $codeResponse = CodeResponse::FAIL, $data = null, $info = '')
     {
