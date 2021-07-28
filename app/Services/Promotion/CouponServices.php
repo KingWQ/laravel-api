@@ -3,7 +3,7 @@
 namespace App\Services\Promotion;
 
 use App\CodeResponse;
-use App\Constant;
+use App\Enums\CouponEnums;
 use App\Inputs\PageInput;
 use App\Models\Promotion\Coupon;
 use App\Models\Promotion\CouponUser;
@@ -35,8 +35,8 @@ class CouponServices extends BaseServices
     public function list(PageInput $page, $columns = ['*'])
     {
         return Coupon::query()
-            ->where('type', Constant::COUPON_TYPE_COMMON)
-            ->where('status', Constant::COUPON_STATUS_NORMAL)
+            ->where('type', CouponEnums::TYPE_COMMON)
+            ->where('status', CouponEnums::STATUS_NORMAL)
             ->orderBy($page->sort, $page->order)
             ->paginate($page->limit, $columns, 'page', $page->page);
     }
@@ -71,20 +71,20 @@ class CouponServices extends BaseServices
             }
         }
 
-        if ($coupon->type != Constant::COUPON_TYPE_COMMON) {
+        if ($coupon->type != CouponEnums::TYPE_COMMON) {
             return $this->throwBusinessException(CodeResponse::COUPON_RECEIVE_FAIL, '优惠券类型不支持');
         }
 
-        if ($coupon->status == Constant::COUPON_STATUS_OUT) {
+        if ($coupon->status == CouponEnums::COUPON_STATUS_OUT) {
             return $this->throwBusinessException(CodeResponse::COUPON_EXCEED_LIMIT);
         }
 
-        if ($coupon->status == Constant::COUPON_STATUS_OUT) {
+        if ($coupon->status == CouponEnums::COUPON_STATUS_OUT) {
             return $this->throwBusinessException(CodeResponse::COUPON_RECEIVE_FAIL, '优惠券已经过期');
         }
 
         $couponUser = new CouponUser();
-        if ($coupon->time_type == Constant::COUPON_TIME_TYPE_TIME) {
+        if ($coupon->time_type == CouponEnums::COUPON_TIME_TYPE_TIME) {
             $startTime = $coupon->start_time;
             $endTime   = $coupon->end_time;
         } else {

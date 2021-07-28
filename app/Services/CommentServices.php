@@ -3,7 +3,7 @@
 namespace App\Services;
 
 
-use App\Constant;
+use App\Enums\Constant;
 use App\Models\Comment;
 use App\Services\User\UserServices;
 use Illuminate\Support\Arr;

@@ -44,7 +44,7 @@ class DBSqlListener
         $sql = str_replace('?', '%s', $sql);
         $sql = sprintf($sql,...$bindings);
 //            $sql = vsprintf($sql,$bindings);
-        Log::info('sql2 log',['sql'=>$sql,'time'=>$time]);
+//        Log::info('sql2 log',['sql'=>$sql,'time'=>$time]);
 //            dd($sql);
 
 

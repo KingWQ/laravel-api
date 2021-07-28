@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers\Wx;
 
-use App\CodeResponse;
-use App\Constant;
 use App\Inputs\PageInput;
 use App\Models\Promotion\CouponUser;
 use App\Services\Promotion\CouponServices;
-use Illuminate\Support\Carbon;
 
 class CouponController extends WxController
 {

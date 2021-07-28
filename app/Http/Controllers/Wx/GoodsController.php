@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
-use App\Constant;
+use App\Enums\Constant;
 use App\Inputs\GoodsListInput;
 use App\Services\CollectServices;
 use App\Services\CommentServices;

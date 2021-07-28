@@ -14,6 +14,15 @@ use Illuminate\Database\Eloquent\Builder;
 
 class GoodsServices extends BaseServices
 {
+    public function getGoodsListByIds(array $ids)
+    {
+        if (empty($ids)) {
+            return collect();
+        }
+
+        return Goods::query()->whereIn('id', $ids)->get();
+    }
+
     public function getGoods(int $goodsId)
     {
         return Goods::query()->find($goodsId);
