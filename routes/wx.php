@@ -48,3 +48,5 @@ Route::get('coupon/mylist', 'CouponController@mylist');         //我的优惠�
 Route::post('coupon/receive', 'CouponController@receive');      //优惠券领取
 
 Route::get('groupon/list', 'GrouponController@list');          //团购列表
+Route::get('groupon/test', 'GrouponController@test');          //团购列表
+Route::get('home/redirectShareUrl', 'HomeController@redirectShareUrl')->name('home.redirectShareUrl');          //团购列表

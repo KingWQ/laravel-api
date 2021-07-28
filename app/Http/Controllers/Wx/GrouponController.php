@@ -9,7 +9,7 @@ use App\Services\Promotion\GrouponServices;
 
 class GrouponController extends WxController
 {
-    protected $except = ['list'];
+    protected $except = ['list','test'];
 
     //优惠券列表
     public function list()
@@ -42,4 +42,12 @@ class GrouponController extends WxController
         return $this->success($list);
     }
 
+    public function test()
+    {
+
+        $rules = GrouponServices::getInstance()->getGrouponRulesById(1);
+        $ret = GrouponServices::getInstance()->createGrouponShareImage($rules);
+        return $ret;
+        return response()->make($ret)->header('Content-Type', 'image/png');
+    }
 }

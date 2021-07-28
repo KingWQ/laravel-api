@@ -8,6 +8,7 @@ use App\Inputs\PageInput;
 use App\Models\Promotion\Coupon;
 use App\Models\Promotion\CouponUser;
 use App\Services\BaseServices;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 class CouponServices extends BaseServices
@@ -44,7 +45,9 @@ class CouponServices extends BaseServices
     public function mylist($userId, $status, PageInput $page, $columns = ['*'])
     {
         return CouponUser::query()
-            ->where('status', $status)
+            ->when(!is_null($status),function(Builder $query) use($status){
+                return $query->where('status', $status);
+            })
             ->where('user_id', $userId)
             ->orderBy($page->sort, $page->order)
             ->paginate($page->limit, $columns, 'page', $page->page);
