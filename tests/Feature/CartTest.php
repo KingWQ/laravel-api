@@ -24,6 +24,28 @@ class CartTest extends TestCase
         $this->authHeader = $this->getAuthHeader($this->user->username, 123456);
     }
 
+    public function testFastadd()
+    {
+        $response = $this->post('wx/cart/add', [
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 2,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 0, "errmsg" => "成功", "data" => "2"]);
+
+        $response = $this->post('wx/cart/fastadd', [
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 5,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 0, "errmsg" => "成功"]);
+        $cart = CartServices::getInstance()
+            ->getCartProduct($this->user->id, $this->product->goods_id, $this->product->id);
+        $this->assertEquals(5, $cart->number);
+        $response->assertJson(["errno" => 0, "errmsg" => "成功","data"=>$cart->id]);
+
+    }
+
     public function testAdd()
     {
         //productId是0 goodsId是0

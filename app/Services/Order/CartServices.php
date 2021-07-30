@@ -7,6 +7,7 @@ use App\Models\Goods\Goods;
 use App\Models\Goods\GoodsProduct;
 use App\Models\Order\Cart;
 use App\Services\BaseServices;
+use App\Services\Goods\GoodsServices;
 
 class CartServices extends BaseServices
 {
@@ -29,6 +30,54 @@ class CartServices extends BaseServices
         return Cart::query()->where('user_id', $userId)->sum('number');
     }
 
+    public function getGoodsInfo($goodsId, $productId)
+    {
+        $goods = GoodsServices::getInstance()->getGoods($goodsId);
+        if (is_null($goods) || !$goods->is_on_sale) {
+            $this->throwBusinessException(CodeResponse::GOODS_UNSHELVE);
+        }
+
+        $product = GoodsServices::getInstance()->getGoodsProductById($productId);
+        if (is_null($product)) {
+            $this->throwBusinessException(CodeResponse::GOODS_NO_STOCK);
+        }
+
+        return [$goods, $product];
+    }
+
+    //添加购物车
+    public function add($userId, $goodsId, $productId, $number)
+    {
+        list($goods, $product) = $this->getGoodsInfo($goodsId, $productId);
+        $cartProduct = $this->getCartProduct($userId, $goodsId, $productId);
+        if(is_null($cartProduct)){
+            return $this->newCart($userId, $goods, $product, $number);
+        }else{
+            $number = $cartProduct->number + $number;
+            return $this->editCart($cartProduct,$product,$number);
+        }
+    }
+    //立即购买
+    public function fastadd($userId, $goodsId, $productId, $number)
+    {
+        list($goods, $product) = $this->getGoodsInfo($goodsId, $productId);
+        $cartProduct = $this->getCartProduct($userId, $goodsId, $productId);
+        if(is_null($cartProduct)){
+            return $this->newCart($userId, $goods, $product, $number);
+        }else{
+            return $this->editCart($cartProduct,$product,$number);
+        }
+    }
+
+    public function editCart($existCart, $product, $num)
+    {
+        if ($num > $product->number) {
+            return $this->throwBusinessException(CodeResponse::GOODS_NO_STOCK);
+        }
+        $existCart->number = $num;
+        $existCart->save();
+        return $existCart;
+    }
     public function newCart($userId, Goods $goods, GoodsProduct $product, $number)
     {
         if ($number > $product->number) {
