@@ -8,9 +8,43 @@ use App\Models\Goods\GoodsProduct;
 use App\Models\Order\Cart;
 use App\Services\BaseServices;
 use App\Services\Goods\GoodsServices;
+use Illuminate\Support\Facades\Log;
 
 class CartServices extends BaseServices
 {
+    public function getCartList($userId)
+    {
+        return Cart::query()->where('user_id', $userId)->get();
+    }
+
+    public function getValidCartList($userId)
+    {
+        $list     = $this->getCartList($userId);
+        $goodsIds = $list->pluck('goods_id')->toArray();
+        $goodsList = GoodsServices::getInstance()->getGoodsListByIds($goodsIds)->keyBy('id');
+        $invalidCartIds = [];
+
+        $list = $list->filter(function (Cart $cart) use ($goodsList, &$invalidCartIds){
+            $goods = $goodsList->get($cart->goods_id);
+            $isValid = !empty($goods) && $goods->is_on_sale;
+            if(!$isValid){
+                $invalidCartIds[] = $cart->id;
+            }
+            return $isValid;
+        });
+        $this->deleteCartList($invalidCartIds);
+        return $list;
+    }
+
+    public function deleteCartList($ids)
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        return Cart::query()->whereIn('id', $ids)->delete();
+    }
+
     public function getCartById($userId, $id)
     {
         return Cart::query()->where('user_id', $userId)->where('id', $id)->first();
@@ -48,24 +82,26 @@ class CartServices extends BaseServices
     //添加购物车
     public function add($userId, $goodsId, $productId, $number)
     {
-        list($goods, $product) = $this->getGoodsInfo($goodsId, $productId);
+        [$goods, $product] = $this->getGoodsInfo($goodsId, $productId);
         $cartProduct = $this->getCartProduct($userId, $goodsId, $productId);
-        if(is_null($cartProduct)){
+        if (is_null($cartProduct)) {
             return $this->newCart($userId, $goods, $product, $number);
-        }else{
+        } else {
             $number = $cartProduct->number + $number;
-            return $this->editCart($cartProduct,$product,$number);
+
+            return $this->editCart($cartProduct, $product, $number);
         }
     }
+
     //立即购买
     public function fastadd($userId, $goodsId, $productId, $number)
     {
-        list($goods, $product) = $this->getGoodsInfo($goodsId, $productId);
+        [$goods, $product] = $this->getGoodsInfo($goodsId, $productId);
         $cartProduct = $this->getCartProduct($userId, $goodsId, $productId);
-        if(is_null($cartProduct)){
+        if (is_null($cartProduct)) {
             return $this->newCart($userId, $goods, $product, $number);
-        }else{
-            return $this->editCart($cartProduct,$product,$number);
+        } else {
+            return $this->editCart($cartProduct, $product, $number);
         }
     }
 
@@ -76,8 +112,10 @@ class CartServices extends BaseServices
         }
         $existCart->number = $num;
         $existCart->save();
+
         return $existCart;
     }
+
     public function newCart($userId, Goods $goods, GoodsProduct $product, $number)
     {
         if ($number > $product->number) {
@@ -102,11 +140,6 @@ class CartServices extends BaseServices
     public function delete($userId, $productIds)
     {
         return Cart::query()->where('user_id', $userId)->whereIn('product_id', $productIds)->delete();
-    }
-
-    public function list($userId)
-    {
-        return [];
     }
 
     public function updateChecked($userId, $productIds, $isChecked)

@@ -3,13 +3,42 @@
 namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
-use App\Models\Order\Cart;
 use App\Services\Goods\GoodsServices;
 use App\Services\Order\CartServices;
 
 class CartController extends WxController
 {
     protected $except = [];
+
+
+    public function index()
+    {
+        $list               = CartServices::getInstance()->getValidCartList($this->userId());
+        $goodsCount         = 0;
+        $goodsAmount        = 0;
+        $checkedGoodsCount  = 0;
+        $checkedGoodsAmount = 0;
+
+        foreach ($list as $item) {
+            $goodsCount  += $item->number;
+            $amount      = bcmul($item->price, $item->number, 2);
+            $goodsAmount = bcadd($goodsAmount, $amount, 2);
+            if ($item->checked) {
+                $checkedGoodsCount  += $item->number;
+                $checkedGoodsAmount = bcadd($checkedGoodsAmount, $amount, 2);
+            }
+        }
+
+        return $this->success([
+            'cartList'  => $list->toArray(),
+            'cartTotal' => [
+                'goodsCount'         => $goodsCount,
+                'goodsAmount'        => (double)$goodsAmount,
+                'checkedGoodsCount'  => $checkedGoodsCount,
+                'checkedGoodsAmount' => (double)$checkedGoodsAmount,
+            ]
+        ]);
+    }
 
     //立即购买
     public function fastadd()
@@ -79,9 +108,8 @@ class CartController extends WxController
     {
         $productIds = $this->verifyArrayNotEmpty('productIds', []);
         CartServices::getInstance()->delete($this->userId(), $productIds);
-        $list = CartServices::getInstance()->list($this->userId());
 
-        return $this->success($list);
+        return $this->index();
     }
 
     public function checked()
@@ -89,9 +117,8 @@ class CartController extends WxController
         $productIds = $this->verifyArrayNotEmpty('productIds', []);
         $isChecked  = $this->verifyBoolean('isChecked');
         CartServices::getInstance()->updateChecked($this->userId(), $productIds, $isChecked == 1);
-        $list = CartServices::getInstance()->list($this->userId());
 
-        return $this->success($list);
+        return $this->index();
 
     }
 }

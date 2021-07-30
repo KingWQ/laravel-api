@@ -52,7 +52,7 @@ Route::get('groupon/test', 'GrouponController@test');          //团购列表
 Route::get('home/redirectShareUrl', 'HomeController@redirectShareUrl')->name('home.redirectShareUrl');          //团购列表
 
 # 购物车模块
-Route::get('cart/index', 'CartController@index');       //获取购物车的数据
+Route::post('cart/index', 'CartController@index');       //获取购物车的数据
 Route::post('cart/add', 'CartController@add');           //添加商品到购物车
 Route::post('cart/fastadd', 'CartController@fastadd');   //立即购买商品
 Route::post('cart/update', 'CartController@update');     //更新购物车的商品
