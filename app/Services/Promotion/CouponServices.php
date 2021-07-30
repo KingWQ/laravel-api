@@ -4,6 +4,7 @@ namespace App\Services\Promotion;
 
 use App\CodeResponse;
 use App\Enums\CouponEnums;
+use App\Enums\CouponUserEnums;
 use App\Inputs\PageInput;
 use App\Models\Promotion\Coupon;
 use App\Models\Promotion\CouponUser;
@@ -13,9 +14,20 @@ use Illuminate\Support\Carbon;
 
 class CouponServices extends BaseServices
 {
+    //获取当前用户可用的优惠券列表
+    public function getUsableCoupons($userId)
+    {
+        return CouponUser::query()->where('user_id', $userId)->where('status', CouponUserEnums::STATUS_USABLE)->get();
+    }
+
     public function getCoupon($id, $columns = ['*'])
     {
         return Coupon::query()->find($id, $columns);
+    }
+
+    public function getCouponUser($id, $columns = ['*'])
+    {
+        return CouponUser::query()->find($id, $columns);
     }
 
     public function countCoupon($couponId)
@@ -45,7 +57,7 @@ class CouponServices extends BaseServices
     public function mylist($userId, $status, PageInput $page, $columns = ['*'])
     {
         return CouponUser::query()
-            ->when(!is_null($status),function(Builder $query) use($status){
+            ->when(!is_null($status), function (Builder $query) use ($status) {
                 return $query->where('status', $status);
             })
             ->where('user_id', $userId)
@@ -104,4 +116,89 @@ class CouponServices extends BaseServices
         $couponUser->save();
     }
 
+    //验证当前价格是否可以使用这张优惠券
+    public function checkCouponAndPrice($coupon, $couponUser, $price)
+    {
+        if (empty($couponUser) || empty($coupon)) {
+            return false;
+        }
+        if ($couponUser->coupon_id != $coupon->id) {
+            return false;
+        }
+        if ($coupon->status != CouponEnums::STATUS_NORMAL) {
+            return false;
+        }
+        if ($coupon->goods_type != CouponEnums::GOODS_TYPE_ALL) {
+            return false;
+        }
+        if (bccomp($coupon->min, $price) == 1) {
+            return false;
+        }
+
+        $now = now();
+        switch ($coupon->time_type) {
+            case CouponEnums::TIME_TYPE_TIME:
+                $start = Carbon::parse($coupon->start_time);
+                $end   = Carbon::parse($coupon->end_time);
+                if ($now->isBefore($start) || $now->isAfter($end)) {
+                    return false;
+                }
+                break;
+            case CouponEnums::TIME_TYPE_DAYS:
+                $expired = Carbon::parse($couponUser->add_time)->addDays($coupon->days);
+                if ($now->isAfter($expired)) {
+                    return false;
+                }
+                break;
+            default:
+                return false;
+        }
+
+        return true;
+    }
+
+    //获取适合当前价格的优惠券列表,并根据优惠折扣进行降序排序
+    public function getMeetPriceCouponAndSort($userId, $price)
+    {
+        $couponUsers = CouponServices::getInstance()->getUsableCoupons($userId);
+        $couponIds   = $couponUsers->pluck('coupon_id')->toArray();
+        $coupons     = CouponServices::getInstance()->getCoupons($couponIds)->keyBy('id');
+
+        return $couponUsers->filter(function (CouponUser $couponUser) use ($coupons, $price) {
+            $coupon = $coupons->get($couponUser->coupon_id);
+
+            return CouponServices::getInstance()->checkCouponAndPrice($coupon, $couponUser, $price);
+        })->sortByDesc(function (CouponUser $couponUser) use ($coupons) {
+            $coupon = $coupons->get($couponUser->coupon_id);
+
+            return $coupon->discount;
+        });
+    }
+
+    public function getCouponUserByCouponId($userId, $couponId)
+    {
+        return CouponUser::query()->where('user_id', $userId)->where('coupon_id', $couponId)->orderBy('id')->first();
+    }
+
+    //选择优惠券
+    public function getMostMeetPriceCoupon($userId, $couponId, $price, &$availableCouponLength)
+    {
+        $couponUsers           = $this->getMeetPriceCouponAndSort($userId, $price);
+        $availableCouponLength = $couponUsers->count();
+
+        if (is_null($couponId) || $couponId == -1) {
+            return null;
+        }
+
+        if (!empty($couponId)) {
+            $coupon     = $this->getCoupon($couponId);
+            $couponUser = $this->getCouponUserByCouponId($userId,$couponId);
+            $is         = $this->checkCouponAndPrice($coupon, $couponUser, $price);
+            if ($is) {
+                return $couponUser;
+            }
+        }
+
+        return $couponUsers->first();
+    }
 }

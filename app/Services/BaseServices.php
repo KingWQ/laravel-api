@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\CodeResponse;
 use App\Exceptions\BusinessException;
 
 class BaseServices
@@ -33,6 +34,11 @@ class BaseServices
     protected function throwBusinessException(array $codeResponse, $msg = '')
     {
         throw new BusinessException($codeResponse, $msg);
+    }
+
+    protected function throwBadArgumentValue()
+    {
+        $this->throwBusinessException(CodeResponse::PARAM_NOT_EMPTY);
     }
 }
 

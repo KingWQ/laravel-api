@@ -244,4 +244,10 @@ class CartTest extends TestCase
 
         $this->assertTrue($cart->checked);
     }
+
+    public function testCheckout()
+    {
+        $response = $this->get('wx/cart/checkout');
+        dd($response->getOriginalContent());
+    }
 }

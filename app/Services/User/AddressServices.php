@@ -13,6 +13,20 @@ class AddressServices extends BaseServices
         return Address::query()->where('user_id', $userId)->get();
     }
 
+    //获取地址或返回默认底子
+    public function getAddressOrDefault($userId, $addressId = null)
+    {
+        if (empty($addressId)) {
+            $address   = AddressServices::getInstance()->getDefaultAddress($userId);
+        } else {
+            $address = AddressServices::getInstance()->getAddress($userId, $addressId);
+            if (empty($address)) {
+                $this->throwBadArgumentValue();
+            }
+        }
+        return $address;
+    }
+
     public function getAddress($userId, $addressId)
     {
         return Address::query()->where('user_id', $userId)->where('id', $addressId)->first();
@@ -42,5 +56,11 @@ class AddressServices extends BaseServices
         }
 
         return $address;
+    }
+
+    public function getDefaultAddress($userId)
+    {
+        return Address::query()->where('user_id',$userId)
+            ->where('is_default',1)->first();
     }
 }

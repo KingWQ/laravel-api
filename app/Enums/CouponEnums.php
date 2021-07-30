@@ -23,4 +23,6 @@ class CouponEnums
      */
     const TIME_TYPE_DAYS = 0;
     const TIME_TYPE_TIME = 1;
+
+    const GOODS_TYPE_ALL = 0;
 }

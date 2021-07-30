@@ -3,8 +3,10 @@
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
 
 use App\Models\Goods\Goods;
+use App\Models\Promotion\GrouponRules;
 use App\Models\Goods\GoodsProduct;
 use App\Models\Goods\GoodsSpecification;
+use App\Services\Goods\GoodsServices;
 use Faker\Generator as Faker;
 
 
@@ -38,14 +40,39 @@ $factory->define(GoodsSpecification::class, function (Faker $faker) {
     ];
 });
 
-$factory->define(GoodsProduct::class, function(Faker $faker){
+$factory->define(GoodsProduct::class, function (Faker $faker) {
     $goods = factory(Goods::class)->create();
-    $spec = factory(GoodsSpecification::class)->create(['goods_id'=>$goods->id]);
+    $spec  = factory(GoodsSpecification::class)->create(['goods_id' => $goods->id]);
+
     return [
-        'goods_id'      => $goods->id,
-        'specifications'=> [$spec->value],
-        'price'         => 999,
-        'number'        => 100,
-        'url'           => $faker->imageUrl,
+        'goods_id'       => $goods->id,
+        'specifications' => [$spec->value],
+        'price'          => 999,
+        'number'         => 100,
+        'url'            => $faker->imageUrl,
     ];
+});
+
+$factory->define(GrouponRules::class, function () {
+    return [
+        'goods_id'        => 0,
+        'goods_name'      => '',
+        'pic_url'         => '',
+        'discount'        => 0,
+        'discount_member' => 2,
+        'expire_time'     => now()->addDays(10)->toDateTimeString(),
+        'status'          => 0,
+    ];
+});
+
+$factory->state(GoodsProduct::class, 'groupon', function () {
+    return [];
+})->afterCreatingState(GoodsProduct::class, 'groupon', function (GoodsProduct $product) {
+    $good = GoodsServices::getInstance()->getGoods($product->goods_id);
+    factory(GrouponRules::class)->create([
+        'goods_id'   => $product->goods_id,
+        'goods_name' => $good->name,
+        'pic_url'    => $good->pic_url,
+        'discount'   => 1
+    ]);
 });
