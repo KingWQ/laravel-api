@@ -10,6 +10,11 @@ use App\Services\BaseServices;
 
 class CartServices extends BaseServices
 {
+    public function getCartById($userId, $id)
+    {
+        return Cart::query()->where('user_id', $userId)->where('id', $id)->first();
+    }
+
     public function getCartProduct($userId, $goodsId, $productId)
     {
         return Cart::query()
@@ -43,5 +48,23 @@ class CartServices extends BaseServices
         $cart->save();
 
         return $cart;
+    }
+
+    public function delete($userId, $productIds)
+    {
+        return Cart::query()->where('user_id', $userId)->whereIn('product_id', $productIds)->delete();
+    }
+
+    public function list($userId)
+    {
+        return [];
+    }
+
+    public function updateChecked($userId, $productIds, $isChecked)
+    {
+        return Cart::query()
+            ->where('user_id', $userId)
+            ->whereIn('product_id', $productIds)
+            ->update(['checked' => $isChecked]);
     }
 }

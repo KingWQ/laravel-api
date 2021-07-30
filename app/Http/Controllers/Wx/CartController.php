@@ -58,4 +58,54 @@ class CartController extends WxController
         return $this->success($count);
     }
 
+    public function update()
+    {
+        $id        = $this->verifyId('id', 0);
+        $goodsId   = $this->verifyId('goodsId', 0);
+        $productId = $this->verifyId('productId', 0);
+        $number    = $this->verifyPositiveInteger('number', 0);
+
+        $cart = CartServices::getInstance()->getCartById($this->userId(), $id);
+        if (is_null($cart)) {
+            return $this->badArgumentValue();
+        }
+        if ($cart->goods_id != $goodsId || $cart->product_id != $productId) {
+            return $this->badArgumentValue();
+        }
+
+        $goods = GoodsServices::getInstance()->getGoods($goodsId);
+        if (is_null($goods) || !$goods->is_on_sale) {
+            return $this->fail(CodeResponse::GOODS_UNSHELVE);
+        }
+
+        $product = GoodsServices::getInstance()->getGoodsProductById($productId);
+        if (is_null($product) || $product->number < $number) {
+            return $this->fail(CodeResponse::GOODS_NO_STOCK);
+        }
+
+        $cart->number = $number;
+        $ret          = $cart->save();
+
+        return $this->failOrSuccess($ret);
+    }
+
+    public function delete()
+    {
+        $productIds = $this->verifyArrayNotEmpty('productIds', []);
+        CartServices::getInstance()->delete($this->userId(), $productIds);
+        $list = CartServices::getInstance()->list($this->userId());
+
+        return $this->success($list);
+    }
+
+    public function checked()
+    {
+        $productIds = $this->verifyArrayNotEmpty('productIds', []);
+        $isChecked  = $this->verifyBoolean('isChecked');
+        CartServices::getInstance()->updateChecked($this->userId(), $productIds, $isChecked == 1);
+        $list = CartServices::getInstance()->list($this->userId());
+
+        return $this->success($list);
+
+    }
 }

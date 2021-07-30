@@ -23,6 +23,11 @@ trait ValidateRequest
         return $this->verifyData($key, $default, 'integer');
     }
 
+    public function verifyPositiveInteger($key, $default = null)
+    {
+        return $this->verifyData($key, $default, 'integer|min:1');
+    }
+
     public function verifyBoolean($key, $default = null)
     {
         return $this->verifyData($key, $default, 'boolean');
@@ -31,6 +36,11 @@ trait ValidateRequest
     public function verifyEnum($key, $default = null, $enum = [])
     {
         return $this->verifyData($key, $default, Rule::in($enum));
+    }
+
+    public function verifyArrayNotEmpty($key, $default = null)
+    {
+        return $this->verifyData($key, $default, 'array|min:1');
     }
 
     private function verifyData($key, $default, $rule)

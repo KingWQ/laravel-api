@@ -56,7 +56,7 @@ Route::get('cart/index', 'CartController@index');       //获取购物车的数�
 Route::post('cart/add', 'CartController@add');           //添加商品到购物车
 Route::post('cart/fastadd', 'CartController@fastadd');   //立即购买商品
 Route::post('cart/update', 'CartController@update');     //更新购物车的商品
-Route::get('cart/delete', 'CartController@delete');     //删除购物车的商品
-Route::get('cart/checked', 'CartController@checked');   //选择或取消选择的商品
+Route::post('cart/delete', 'CartController@delete');     //删除购物车的商品
+Route::post('cart/checked', 'CartController@checked');   //选择或取消选择的商品
 Route::get('cart/goodscount', 'CartController@goodscount');//获取购物车商品件数
 Route::get('cart/checkout', 'CartController@checkout');     //下单前信息确认

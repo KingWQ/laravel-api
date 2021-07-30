@@ -67,4 +67,105 @@ class CartTest extends TestCase
         ], $this->authHeader);
         $response->assertJson(["errno" => 711, "errmsg" => "商品库存不足!"]);
     }
+
+    public function testUpdate()
+    {
+        $response = $this->post('wx/cart/add', [
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 2,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 0, "errmsg" => "成功", "data" => "2"]);
+        $cart = CartServices::getInstance()->getCartProduct($this->user->id,
+            $this->product->goods_id,$this->product->id);
+
+        $response = $this->post('wx/cart/update', [
+            'id'=>$cart->id,
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 6,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 0, "errmsg" => "成功"]);
+
+        $response = $this->post('wx/cart/update', [
+            'id'=>$cart->id,
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 11,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 711, "errmsg" => "商品库存不足!"]);
+
+
+        $response = $this->post('wx/cart/update', [
+            'id'=>$cart->id,
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 0,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 402]);
+
+    }
+
+    public function testDelete()
+    {
+        $response = $this->post('wx/cart/add', [
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 2,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 0, "errmsg" => "成功", "data" => "2"]);
+
+        $cart = CartServices::getInstance()->getCartProduct($this->user->id,
+            $this->product->goods_id,$this->product->id);
+        $this->assertNotNull($cart);
+
+        $response = $this->post('wx/cart/delete', [
+            'productIds' => [$this->product->id],
+        ], $this->authHeader);
+
+        $cart = CartServices::getInstance()->getCartProduct($this->user->id,
+            $this->product->goods_id,$this->product->id);
+        $this->assertNull($cart);
+
+        $response = $this->post('wx/cart/delete', [
+            'productIds' => [],
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 402]);
+
+    }
+
+    public function testChecked()
+    {
+        $response = $this->post('wx/cart/add', [
+            'goodsId'   => $this->product->goods_id,
+            'productId' => $this->product->id,
+            'number'    => 2,
+        ], $this->authHeader);
+        $response->assertJson(["errno" => 0, "errmsg" => "成功", "data" => "2"]);
+
+        $cart = CartServices::getInstance()->getCartProduct($this->user->id,
+            $this->product->goods_id,$this->product->id);
+
+        $this->assertTrue($cart->checked);
+
+        $response = $this->post('wx/cart/checked', [
+            'productIds' => [$this->product->id],
+            'isChecked'=>0,
+        ], $this->authHeader);
+
+        $cart = CartServices::getInstance()->getCartProduct($this->user->id,
+            $this->product->goods_id,$this->product->id);
+
+        $this->assertFalse($cart->checked);
+
+        $response = $this->post('wx/cart/checked', [
+            'productIds' => [$this->product->id],
+            'isChecked'=>1,
+        ], $this->authHeader);
+
+        $cart = CartServices::getInstance()->getCartProduct($this->user->id,
+            $this->product->goods_id,$this->product->id);
+
+        $this->assertTrue($cart->checked);
+    }
 }
