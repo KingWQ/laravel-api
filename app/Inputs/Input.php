@@ -21,7 +21,6 @@ class Input
         if (is_null($data)) {
             $data = request()->input();
         }
-
         $validate = Validator::make($data, $this->rule());
         if ($validate->fails()) {
             throw new BusinessException(CodeResponse::PARAM_NOT_EMPTY);
@@ -50,6 +49,6 @@ class Input
      */
     public static function new($data = null)
     {
-        return (new static())->fill();
+        return (new static())->fill($data);
     }
 }

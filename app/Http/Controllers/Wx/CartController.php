@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\Wx;
 
 use App\CodeResponse;
-use App\Models\Order\Cart;
-use App\Models\Promotion\CouponUser;
 use App\Services\Goods\GoodsServices;
 use App\Services\Order\CartServices;
+use App\Services\Order\OrderServices;
 use App\Services\Promotion\CouponServices;
-use App\Services\Promotion\GrouponServices;
-use App\Services\SystemServices;
 use App\Services\User\AddressServices;
 
 class CartController extends WxController
@@ -143,6 +140,7 @@ class CartController extends WxController
         $checkedGoodsList = CartServices::getInstance()->getCheckedCartList($this->userId(), $cartId);
 
         //3 计算订单总金额
+        $grouponPrice = 0;
         $checkedGoodsPrice = CartServices::getInstance()
             ->getCartPriceCutGroupon($checkedGoodsList, $grouponRulesId, $grouponPrice);
 
@@ -163,11 +161,7 @@ class CartController extends WxController
 
 
         //5 运费
-        $freightPrice = 0;
-        $freightMin   = SystemServices::getInstance()->getFreightMin();
-        if (bccomp($freightMin, $checkedGoodsPrice) == 1) {
-            $freightPrice = SystemServices::getInstance()->getFreightValue();
-        }
+        $freightPrice = OrderServices::getInstance()->getFreight($checkedGoodsPrice);
 
         //6 计算订单金额
         $orderPrice = bcadd($checkedGoodsPrice, $freightPrice, 2);

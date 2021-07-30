@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Wx;
 
+use App\Inputs\OrderSubmitInput;
 use App\Inputs\PageInput;
 use App\Models\Promotion\GrouponRules;
 use App\Services\Goods\GoodsServices;
+use App\Services\Order\OrderServices;
 use App\Services\Promotion\GrouponServices;
 
 class GrouponController extends WxController
@@ -44,6 +46,10 @@ class GrouponController extends WxController
 
     public function test()
     {
+        $input = OrderSubmitInput::new(['addressId' => 1, 'cartId' => 0, 'grouponRulesId' => 25]);
+        dump($input->addressId);
+        die;
+        $order = OrderServices::getInstance()->submit($this->user->id, $input);
 
         $rules = GrouponServices::getInstance()->getGrouponRulesById(1);
         $ret = GrouponServices::getInstance()->createGrouponShareImage($rules);

@@ -60,3 +60,12 @@ Route::post('cart/delete', 'CartController@delete');     //删除购物车的商
 Route::post('cart/checked', 'CartController@checked');   //选择或取消选择的商品
 Route::get('cart/goodscount', 'CartController@goodscount');//获取购物车商品件数
 Route::get('cart/checkout', 'CartController@checkout');     //下单前信息确认
+
+//订单模块--订单
+Route::any('order/submit', 'OrderController@submit');   //提交订单
+Route::any('order/cancel', 'OrderController@cancel');   //取消订单
+Route::any('order/refund', 'OrderController@refund');   //退款取消订单
+Route::any('order/delete', 'OrderController@delete');   //删除订单
+Route::any('order/prepay', 'OrderController@prepay');   //订单的预支付会话
+Route::any('order/detail', 'OrderController@detail');   //订单详情
+Route::any('order/list', 'OrderController@list');       //订单列表
