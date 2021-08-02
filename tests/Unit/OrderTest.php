@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\CodeResponse;
 use App\Exceptions\BusinessException;
 use App\Inputs\OrderSubmitInput;
+use App\Jobs\OrderUnpaidTimeEndJob;
 use App\Models\Goods\GoodsProduct;
 use App\Models\Order\OrderGoods;
 use App\Models\Promotion\GrouponRules;
@@ -65,5 +66,26 @@ class OrderTest extends TestCase
 
     }
 
+    public function testReduceStock()
+    {
+        $product1 = factory(GoodsProduct::class)->create(['price' => 11.3]);
+        $product2 = factory(GoodsProduct::class)->state('groupon')->create(['price' => 20.56]);
+        $product3 = factory(GoodsProduct::class)->create(['price' => 10.6]);
+        CartServices::getInstance()->add($this->user->id, $product1->goods_id, $product1->id, 2);
+        CartServices::getInstance()->add($this->user->id, $product2->goods_id, $product2->id, 5);
+        CartServices::getInstance()->add($this->user->id, $product3->goods_id, $product3->id, 3);
+        CartServices::getInstance()->updateChecked($this->user->id, [$product1->id], false);
+        $checkedGoodsList = CartServices::getInstance()->getCheckedCartList($this->user->id);
+
+        OrderServices::getInstance()->reduceProductStock($checkedGoodsList);
+        $this->assertEquals($product2->number-5, $product2->refresh()->number);
+        $this->assertEquals($product3->number-3, $product3->refresh()->number);
+    }
+
+    public function testJob()
+    {
+        dispatch(new OrderUnpaidTimeEndJob(1, 2));
+
+    }
 
 }

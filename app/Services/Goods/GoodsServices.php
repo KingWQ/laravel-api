@@ -14,6 +14,12 @@ use Illuminate\Database\Eloquent\Builder;
 
 class GoodsServices extends BaseServices
 {
+    public function reduceStock($productId, $number)
+    {
+        return GoodsProduct::query()->where('id',$productId)
+            ->where('number','>=',$number)->decrement('number',$number);
+    }
+
     public function getGoodsListByIds(array $ids)
     {
         if (empty($ids)) {
@@ -50,6 +56,11 @@ class GoodsServices extends BaseServices
     public function getGoodsProductById(int $productId)
     {
         return GoodsProduct::query()->find($productId);
+    }
+    public function getGoodsProductByIds(array $productIds)
+    {
+        if(empty($productIds)) return collect();
+        return GoodsProduct::query()->whereIn('id',$productIds)->get();
     }
 
     public function getGoodsIssue(int $page = 1, int $limit = 4)

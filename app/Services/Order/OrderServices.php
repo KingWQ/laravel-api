@@ -6,9 +6,11 @@ use App\CodeResponse;
 use App\Constant;
 use App\Enums\OrderEnums;
 use App\Inputs\OrderSubmitInput;
+use App\Jobs\OrderUnpaidTimeEndJob;
 use App\Models\Order\Order;
 use App\Models\Order\OrderGoods;
 use App\Services\BaseServices;
+use App\Services\Goods\GoodsServices;
 use App\Services\Promotion\CouponServices;
 use App\Services\Promotion\GrouponServices;
 use App\Services\SystemServices;
@@ -90,13 +92,28 @@ class OrderServices extends BaseServices
             ->openOrJoinGroupon($userId, $order->id, $input->grouponRulesId, $input->grouponLinkId);
 
         //10 设置订单支付超时任务
+        dispatch(new OrderUnpaidTimeEndJob($userId, $order->id));
 
         return $order;
     }
 
     public function reduceProductStock($goodsList)
     {
-
+        $productIds = $goodsList->pluck('product_id')->toArray();
+        $products = GoodsServices::getInstance()->getGoodsProductByIds($productIds)->keyBy('id');
+        foreach($goodsList as $cart){
+            $product = $products->get($cart->product_id);
+            if(empty($product)){
+                $this->throwBadArgumentValue();
+            }
+            if($product->number < $cart->number){
+                $this->throwBusinessException(CodeResponse::GOODS_NO_STOCK);
+            }
+            $row = GoodsServices::getInstance()->reduceStock($product->id,$cart->number);
+            if($row == 0){
+                $this->throwBusinessException(CodeResponse::GOODS_NO_STOCK);
+            }
+        }
     }
 
 
@@ -129,6 +146,12 @@ class OrderServices extends BaseServices
         return $freightPrice;
     }
 
+    public function cancel($userId,$orderId)
+    {
+        dump($userId,$orderId);
+        return;
+    }
+
     //获取订单编号
     public function generateOrderSn()
     {
@@ -147,4 +170,6 @@ class OrderServices extends BaseServices
     {
         return Order::query()->where('order_sn', $orderSn)->exists();
     }
+
+
 }
