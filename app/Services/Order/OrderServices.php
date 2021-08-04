@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
 
 class OrderServices extends BaseServices
 {
+    //生成订单
     public function submit($userId, OrderSubmitInput $input)
     {
         //1 验证团购活动是否有效
@@ -102,6 +103,155 @@ class OrderServices extends BaseServices
         return $order;
     }
 
+    //支付成功 处理订单
+    public function payOrder(Order $order, $payId)
+    {
+        if (!$order->canPayHandle()) {
+            $this->throwBusinessException(CodeResponse::ORDER_PAY_FAIL, '订单不能支付');
+        }
+
+        $order->pay_id       = $payId;
+        $order->pay_time     = now()->toDateTimeString();
+        $order->order_status = OrderEnums::STATUS_PAY;
+        if ($order->cas() == 0) {
+            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+        }
+
+        //处理团购订单
+        GrouponServices::getInstance()->payGrouponOrder($order->id);
+
+        //发送邮箱给管理员
+        Notification::route('mail', env('MAIL_USERNAME'))->notify(new NewPaidOrderEmailNotify($order->id));
+
+        //发送短信给用户
+        $user = UserServices::getInstance()->getUserById($order->user_id);
+        $user->notify(new NewPaidOrderSmsNotify());
+
+        return $order;
+    }
+
+    //订单发货
+    public function ship($userId, $orderId, $shipSn, $shipChannel)
+    {
+        $order = $this->getOrderByUserIdAndId($userId, $orderId);
+        if (empty($order)) {
+            $this->throwBusinessException();
+        }
+
+        if (!$order->canShipHandle()) {
+            $this->throwBusinessException(CodeResponse::ORDER_INVALID_OPERATION, '该订单不能发货');
+        }
+
+        $order->order_status = OrderEnums::STATUS_SHIP;
+        $order->ship_sn      = $shipSn;
+        $order->ship_channel = $shipChannel;
+        $order->ship_time    = now()->toDateTimeString();
+        if ($order->cas() == 0) {
+            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+        }
+
+        //todo 发通知给用户
+        return $order;
+    }
+
+    //确认收货
+    public function confirm($userId, $orderId, $isAuto = false)
+    {
+        $order = $this->getOrderByUserIdAndId($userId, $orderId);
+        if (empty($order)) {
+            $this->throwBusinessException();
+        }
+        if (!$order->canConfirmHandle()) {
+            $this->throwBusinessException(CodeResponse::ORDER_INVALID_OPERATION, '该订单不能被确认收货');
+        }
+
+        $order->comments     = $this->countOrderGoods($orderId);
+        $order->order_status = $isAuto ? OrderEnums::STATUS_AUTO_CONFIRM : OrderEnums::STATUS_CONFIRM;
+        $order->confirm      = now()->toDateTimeString();
+        if ($order->cas() == 0) {
+            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+        }
+
+        return $order;
+    }
+
+    //取消订单 并退款
+    public function refund($userId, $orderId)
+    {
+        $order = $this->getOrderByUserIdAndId($userId, $orderId);
+
+        if (empty($order)) {
+            $this->throwBusinessException();
+        }
+
+        if (!$order->canRefundHandle()) {
+            $this->throwBusinessException(CodeResponse::ORDER_INVALID_OPERATION, '该订单不能申请退款哦');
+        }
+        $order->order_status = OrderEnums::STATUS_REFUND;
+        if ($order->cas() == 0) {
+            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+        }
+
+        //todo 发通知给管理员进行退款处理
+        return $order;
+    }
+
+    //管理员同意退款
+    public function agreeRefund(Order $order, $refundType, $refundContent)
+    {
+        if (!$order->canAgreeRefundHandle()) {
+            $this->throwBusinessException(CodeResponse::ORDER_INVALID_OPERATION, '该订单不能同意退款');
+        }
+
+        $now                   = now()->toDateTimeString();
+        $order->order_status   = OrderEnums::STATUS_REFUND_CONFIRM;
+        $order->end_time       = $now;
+        $order->refund_amount  = $order->actual_price;
+        $order->refund_type    = $refundType;
+        $order->refund_content = $refundContent;
+        $order->refund_time    = $now;
+        if ($order->cas() == 0) {
+            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+        }
+        $this->returnProductStock($order->id);
+
+        return $order;
+    }
+
+    //删除订单
+    public function delete($userId, $orderId)
+    {
+        $order = $this->getOrderByUserIdAndId($userId, $orderId);
+        if (empty($order)) {
+            $this->throwBusinessException();
+        }
+        if (!$order->canDeleteHandle()) {
+            $this->throwBusinessException(CodeResponse::ORDER_INVALID_OPERATION, '该订单不能被删除哦');
+        }
+        $order->delete();
+
+        //todo 处理订单售后的信息
+        return true;
+    }
+
+    //计算订单中商品的数量
+    public function countOrderGoods($orderId)
+    {
+        return OrderGoods::query()->where('order_id', $orderId)->count(['id']);
+    }
+
+    //返还库存
+    public function returnProductStock($orderId)
+    {
+        $orderGoods = $this->getOrderGoodsList($orderId);
+        foreach ($orderGoods as $goods) {
+            $row = GoodsServices::getInstance()->addStock($goods->product_id, $goods->number);
+            if ($row == 0) {
+                $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+            }
+        }
+    }
+
     public function reduceProductStock($goodsList)
     {
         $productIds = $goodsList->pluck('product_id')->toArray();
@@ -121,7 +271,7 @@ class OrderServices extends BaseServices
         }
     }
 
-
+    //保存订单快照
     private function saveOrderGoods($checkedGoodsList, $orderId)
     {
         foreach ($checkedGoodsList as $cart) {
@@ -161,6 +311,7 @@ class OrderServices extends BaseServices
         return OrderGoods::query()->where('order_id', $orderId)->get();
     }
 
+    //取消订单
     public function userCancel($userId, $orderId)
     {
         DB::transaction(function () use ($userId, $orderId) {
@@ -205,13 +356,7 @@ class OrderServices extends BaseServices
             $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
         }
 
-        $orderGoods = $this->getOrderGoodsList($orderId);
-        foreach ($orderGoods as $goods) {
-            $row = GoodsServices::getInstance()->addStock($goods->product_id, $goods->number);
-            if ($row == 0) {
-                $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
-            }
-        }
+        $this->returnProductStock($orderId);
 
         return true;
     }
@@ -229,39 +374,12 @@ class OrderServices extends BaseServices
         });
     }
 
-    //支付成功 处理订单
-    public function payOrder(Order $order, $payId)
-    {
-        if(!$order->canPayHandle()){
-            $this->throwBusinessException(CodeResponse::ORDER_PAY_FAIL,'订单不能支付');
-        }
 
-        $order->pay_id = $payId;
-        $order->pay_time = now()->toDateTimeString();
-        $order->order_status = OrderEnums::STATUS_PAY;
-        if($order->cas() == 0){
-            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
-        }
-
-        //处理团购订单
-        GrouponServices::getInstance()->payGrouponOrder($order->id);
-
-        //发送邮箱给管理员
-        Notification::route('mail',env('MAIL_USERNAME'))->notify(new NewPaidOrderEmailNotify($order->id));
-
-        //发送短信给用户
-        $user = UserServices::getInstance()->getUserById($order->user_id);
-        $user->notify(new NewPaidOrderSmsNotify());
-
-        return $order;
-    }
-
-        //检查订单号是否有效
+    //检查订单号是否有效
     private function isOrderSnUsed($orderSn)
     {
         return Order::query()->where('order_sn', $orderSn)->exists();
     }
-
 
 
 }
