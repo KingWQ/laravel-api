@@ -5,6 +5,7 @@ namespace App\Services\Order;
 use App\CodeResponse;
 use App\Constant;
 use App\Enums\OrderEnums;
+use App\Exceptions\BusinessException;
 use App\Inputs\OrderSubmitInput;
 use App\Jobs\OrderUnpaidTimeEndJob;
 use App\Models\Order\Order;
@@ -19,6 +20,7 @@ use App\Services\SystemServices;
 use App\Services\User\AddressServices;
 use App\Services\User\UserServices;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
@@ -238,6 +240,34 @@ class OrderServices extends BaseServices
     public function countOrderGoods($orderId)
     {
         return OrderGoods::query()->where('order_id', $orderId)->count(['id']);
+    }
+
+    //获取超时未收货的订单
+    public function getTimeUnConfirmOrders()
+    {
+        $days = SystemServices::getInstance()->getUnConfirmOrderTime();
+
+        return Order::query()
+            ->where('order_status', OrderEnums::STATUS_SHIP)
+            ->where('ship_time', '<=', now()->subDays($days))
+            ->where('ship_time', '>=', now()->subDays($days + 30))
+            ->get();
+    }
+
+    //自动确认收货
+    public function autoConfirm()
+    {
+        $orders = $this->getTimeUnConfirmOrders();
+        foreach($orders as $order){
+            try{
+                $this->confirm($order->user_id, $order->id, true);
+
+            }catch (BusinessException $e){
+
+            }catch (\Throwable $e){
+                Log::error('Auto confirm error. Error: '.$e->getMessage());
+            }
+        }
     }
 
     //返还库存

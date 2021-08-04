@@ -44,6 +44,15 @@ class SystemServices extends BaseServices
         return (double) $this->get(self::LITEMALL_EXPRESS_FREIGHT_MIN);
     }
 
+    /**
+     * @return |null
+     * 获取超时未确认收货的时间
+     */
+    public function getUnConfirmOrderTime()
+    {
+        return $this->get(self::LITEMALL_ORDER_UNCONFIRM);
+    }
+
     public function get($key)
     {
         $value = System::query()->where('key_name', $key)->first(['key_value']);
