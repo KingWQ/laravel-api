@@ -31,4 +31,9 @@ class User extends BaseModel implements JWTSubject, AuthenticatableContract, Aut
             'userId' => $this->getKey(),
         ];
     }
+
+    public function routeNotificationForEasySms($driver, $notification = null)
+    {
+        return $this->mobile;
+    }
 }

@@ -24,6 +24,11 @@ class UserServices extends BaseServices
         return User::query()->whereIn('id', $userIds)->get();
     }
 
+    public function getUserById($id)
+    {
+        return User::query()->find($id);
+    }
+
     /**
      * 根据用户名获取用户
      * @param $username

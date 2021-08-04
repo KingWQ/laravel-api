@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\CodeResponse;
+use App\Enums\OrderEnums;
 use App\Exceptions\BusinessException;
 use App\Inputs\OrderSubmitInput;
 use App\Jobs\OrderUnpaidTimeEndJob;
@@ -78,14 +79,48 @@ class OrderTest extends TestCase
         $checkedGoodsList = CartServices::getInstance()->getCheckedCartList($this->user->id);
 
         OrderServices::getInstance()->reduceProductStock($checkedGoodsList);
-        $this->assertEquals($product2->number-5, $product2->refresh()->number);
-        $this->assertEquals($product3->number-3, $product3->refresh()->number);
+        $this->assertEquals($product2->number - 5, $product2->refresh()->number);
+        $this->assertEquals($product3->number - 3, $product3->refresh()->number);
     }
 
-    public function testJob()
+    public function testCancel()
     {
-        dispatch(new OrderUnpaidTimeEndJob(1, 2));
-
+        $order = $this->getOrder();
+        OrderServices::getInstance()->userCancel($this->user->id, $order->id);
+        $this->assertEquals(OrderEnums::STATUS_CANCEL, $order->refresh()->order_status);
     }
 
+    private function getOrder()
+    {
+        $this->user = factory(User::class)->state('address_default')->create();
+        $address    = AddressServices::getInstance()->getAddressOrDefault($this->user->id);
+
+        $product1 = factory(GoodsProduct::class)->create(['price' => 11.3]);
+        $product2 = factory(GoodsProduct::class)->state('groupon')->create(['price' => 20.56]);
+        $product3 = factory(GoodsProduct::class)->create(['price' => 10.6]);
+        CartServices::getInstance()->add($this->user->id, $product1->goods_id, $product1->id, 2);
+        CartServices::getInstance()->add($this->user->id, $product2->goods_id, $product2->id, 5);
+        CartServices::getInstance()->add($this->user->id, $product3->goods_id, $product3->id, 3);
+        CartServices::getInstance()->updateChecked($this->user->id, [$product1->id], false);
+        $rulesId = GrouponRules::query()->where('goods_id', $product2->goods_id)->first()->id ?? null;
+        $input   = OrderSubmitInput::new([
+            'addressId'      => $address->id,
+            'cartId'         => 0,
+            'grouponRulesId' => $rulesId,
+            'couponId'       => 0,
+            'message'        => '备注'
+        ]);
+        $order   = OrderServices::getInstance()->submit($this->user->id, $input);
+
+        return $order;
+    }
+
+    public function testCas()
+    {
+        $user = User::first(['id','nickname','mobile','update_time']);
+        $user->nickname = 'test';
+        $user->mobile = '15000000';
+        $ret = $user->cas();
+        dd($ret,$user);
+    }
 }

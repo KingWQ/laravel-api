@@ -52,7 +52,7 @@ Route::get('groupon/test', 'GrouponController@test');          //团购列表
 Route::get('home/redirectShareUrl', 'HomeController@redirectShareUrl')->name('home.redirectShareUrl');          //团购列表
 
 # 购物车模块
-Route::post('cart/index', 'CartController@index');       //获取购物车的数据
+Route::get('cart/index', 'CartController@index');       //获取购物车的数据
 Route::post('cart/add', 'CartController@add');           //添加商品到购物车
 Route::post('cart/fastadd', 'CartController@fastadd');   //立即购买商品
 Route::post('cart/update', 'CartController@update');     //更新购物车的商品
@@ -62,8 +62,8 @@ Route::get('cart/goodscount', 'CartController@goodscount');//获取购物车商�
 Route::get('cart/checkout', 'CartController@checkout');     //下单前信息确认
 
 //订单模块--订单
-Route::any('order/submit', 'OrderController@submit');   //提交订单
-Route::any('order/cancel', 'OrderController@cancel');   //取消订单
+Route::post('order/submit', 'OrderController@submit');   //提交订单
+Route::post('order/cancel', 'OrderController@cancel');   //取消订单
 Route::any('order/refund', 'OrderController@refund');   //退款取消订单
 Route::any('order/delete', 'OrderController@delete');   //删除订单
 Route::any('order/prepay', 'OrderController@prepay');   //订单的预支付会话

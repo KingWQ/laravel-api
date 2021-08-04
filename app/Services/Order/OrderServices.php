@@ -9,12 +9,17 @@ use App\Inputs\OrderSubmitInput;
 use App\Jobs\OrderUnpaidTimeEndJob;
 use App\Models\Order\Order;
 use App\Models\Order\OrderGoods;
+use App\Notifications\NewPaidOrderEmailNotify;
+use App\Notifications\NewPaidOrderSmsNotify;
 use App\Services\BaseServices;
 use App\Services\Goods\GoodsServices;
 use App\Services\Promotion\CouponServices;
 use App\Services\Promotion\GrouponServices;
 use App\Services\SystemServices;
 use App\Services\User\AddressServices;
+use App\Services\User\UserServices;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class OrderServices extends BaseServices
@@ -100,17 +105,17 @@ class OrderServices extends BaseServices
     public function reduceProductStock($goodsList)
     {
         $productIds = $goodsList->pluck('product_id')->toArray();
-        $products = GoodsServices::getInstance()->getGoodsProductByIds($productIds)->keyBy('id');
-        foreach($goodsList as $cart){
+        $products   = GoodsServices::getInstance()->getGoodsProductByIds($productIds)->keyBy('id');
+        foreach ($goodsList as $cart) {
             $product = $products->get($cart->product_id);
-            if(empty($product)){
+            if (empty($product)) {
                 $this->throwBadArgumentValue();
             }
-            if($product->number < $cart->number){
+            if ($product->number < $cart->number) {
                 $this->throwBusinessException(CodeResponse::GOODS_NO_STOCK);
             }
-            $row = GoodsServices::getInstance()->reduceStock($product->id,$cart->number);
-            if($row == 0){
+            $row = GoodsServices::getInstance()->reduceStock($product->id, $cart->number);
+            if ($row == 0) {
                 $this->throwBusinessException(CodeResponse::GOODS_NO_STOCK);
             }
         }
@@ -146,10 +151,69 @@ class OrderServices extends BaseServices
         return $freightPrice;
     }
 
-    public function cancel($userId,$orderId)
+    public function getOrderByUserIdAndId($userId, $orderId)
     {
-        dump($userId,$orderId);
-        return;
+        return Order::query()->where('user_id', $userId)->find($orderId);
+    }
+
+    public function getOrderGoodsList($orderId)
+    {
+        return OrderGoods::query()->where('order_id', $orderId)->get();
+    }
+
+    public function userCancel($userId, $orderId)
+    {
+        DB::transaction(function () use ($userId, $orderId) {
+            $this->cancel($userId, $orderId, 'user');
+        });
+    }
+
+    public function systemCancel($userId, $orderId)
+    {
+        DB::transaction(function () use ($userId, $orderId) {
+            $this->cancel($userId, $orderId, 'system');
+        });
+    }
+
+    public function adminCancel($userId, $orderId)
+    {
+        DB::transaction(function () use ($userId, $orderId) {
+            $this->cancel($userId, $orderId, 'admin');
+        });
+    }
+
+    private function cancel($userId, $orderId, $role = 'user')
+    {
+        $order = $this->getOrderByUserIdAndId($userId, $orderId);
+        if (is_null($order)) {
+            $this->throwBadArgumentValue();
+        }
+        if (!$order->canCanelHandle()) {
+            $this->throwBusinessException(CodeResponse::ORDER_INVALID_OPERATION, '订单不能取消');
+        }
+        switch ($role) {
+            case 'system':
+                $order->order_status = OrderEnums::STATUS_AUTO_CANCEL;
+                break;
+            case 'admin':
+                $order->order_status = OrderEnums::STATUS_ADMIN_CANCEL;
+                break;
+            default:
+                $order->order_status = OrderEnums::STATUS_CANCEL;
+        }
+        if ($order->cas() == 0) {
+            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+        }
+
+        $orderGoods = $this->getOrderGoodsList($orderId);
+        foreach ($orderGoods as $goods) {
+            $row = GoodsServices::getInstance()->addStock($goods->product_id, $goods->number);
+            if ($row == 0) {
+                $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+            }
+        }
+
+        return true;
     }
 
     //获取订单编号
@@ -165,11 +229,39 @@ class OrderServices extends BaseServices
         });
     }
 
-    //检查订单号是否有效
+    //支付成功 处理订单
+    public function payOrder(Order $order, $payId)
+    {
+        if(!$order->canPayHandle()){
+            $this->throwBusinessException(CodeResponse::ORDER_PAY_FAIL,'订单不能支付');
+        }
+
+        $order->pay_id = $payId;
+        $order->pay_time = now()->toDateTimeString();
+        $order->order_status = OrderEnums::STATUS_PAY;
+        if($order->cas() == 0){
+            $this->throwBusinessException(CodeResponse::UPDATED_FAIL);
+        }
+
+        //处理团购订单
+        GrouponServices::getInstance()->payGrouponOrder($order->id);
+
+        //发送邮箱给管理员
+        Notification::route('mail',env('MAIL_USERNAME'))->notify(new NewPaidOrderEmailNotify($order->id));
+
+        //发送短信给用户
+        $user = UserServices::getInstance()->getUserById($order->user_id);
+        $user->notify(new NewPaidOrderSmsNotify());
+
+        return $order;
+    }
+
+        //检查订单号是否有效
     private function isOrderSnUsed($orderSn)
     {
         return Order::query()->where('order_sn', $orderSn)->exists();
     }
+
 
 
 }

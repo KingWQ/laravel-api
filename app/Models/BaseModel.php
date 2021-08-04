@@ -62,4 +62,37 @@ class BaseModel extends Model
     }
 
 
+    /**
+     * 乐观锁更新 compare and save
+     * @return mixed
+     */
+    public function cas()
+    {
+        throw_if(!$this->exists, \Exception::class,'model not exists when cas');
+
+        $dirty = $this->getDirty();
+        if(empty($dirty)){
+            return 0;
+        }
+
+        if($this->usesTimestamps()){
+            $this->updateTimestamps();
+            $dirty = $this->getDirty();
+        }
+
+        $diff = array_diff(array_keys($dirty), array_keys($this->original));
+        throw_if(!empty($diff), \Exception::class,'key ['.implode(',',$diff).'model not exists when cas');
+
+        $query    = $this->newModelQuery()->where($this->getKeyName(), $this->getKey());
+        foreach ($dirty as $key => $value) {
+            $query = $query->where($key, $this->getOriginal($key));
+        }
+
+        $row = $query->update($dirty);
+        if($row>0){
+            $this->syncChanges();
+            $this->syncOriginal();
+        }
+        return $row;
+    }
 }

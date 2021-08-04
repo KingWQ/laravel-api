@@ -16,9 +16,20 @@ class GoodsServices extends BaseServices
 {
     public function reduceStock($productId, $number)
     {
-        return GoodsProduct::query()->where('id',$productId)
-            ->where('number','>=',$number)->decrement('number',$number);
+        return GoodsProduct::query()
+            ->where('id', $productId)
+            ->where('number', '>=', $number)
+            ->decrement('number', $number);
     }
+
+    public function addStock($productId, $num)
+    {
+        $product         = $this->getGoodsProductById($productId);
+        $product->number = $product->number + $num;
+
+        return $product->cas();
+    }
+
 
     public function getGoodsListByIds(array $ids)
     {
@@ -57,10 +68,14 @@ class GoodsServices extends BaseServices
     {
         return GoodsProduct::query()->find($productId);
     }
+
     public function getGoodsProductByIds(array $productIds)
     {
-        if(empty($productIds)) return collect();
-        return GoodsProduct::query()->whereIn('id',$productIds)->get();
+        if (empty($productIds)) {
+            return collect();
+        }
+
+        return GoodsProduct::query()->whereIn('id', $productIds)->get();
     }
 
     public function getGoodsIssue(int $page = 1, int $limit = 4)
