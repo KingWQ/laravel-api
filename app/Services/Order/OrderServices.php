@@ -3,7 +3,6 @@
 namespace App\Services\Order;
 
 use App\CodeResponse;
-use App\Constant;
 use App\Enums\OrderEnums;
 use App\Exceptions\BusinessException;
 use App\Inputs\OrderSubmitInput;
@@ -258,14 +257,14 @@ class OrderServices extends BaseServices
     public function autoConfirm()
     {
         $orders = $this->getTimeUnConfirmOrders();
-        foreach($orders as $order){
-            try{
+        foreach ($orders as $order) {
+            try {
                 $this->confirm($order->user_id, $order->id, true);
 
-            }catch (BusinessException $e){
+            } catch (BusinessException $e) {
 
-            }catch (\Throwable $e){
-                Log::error('Auto confirm error. Error: '.$e->getMessage());
+            } catch (\Throwable $e) {
+                Log::error('Auto confirm error. Error: ' . $e->getMessage());
             }
         }
     }
@@ -329,6 +328,48 @@ class OrderServices extends BaseServices
         }
 
         return $freightPrice;
+    }
+
+    //订单详情
+    public function detail($userId, $orderId)
+    {
+        $order = $this->getOrderByUserIdAndId($userId, $orderId);
+        if (empty($order)) {
+            $this->throwBusinessException(CodeResponse::ORDER_UNKNOWN);
+        }
+
+        $detail = Arr::only($order->toArray(), [
+            "id",
+            "orderSn",
+            "message",
+            "addTime",
+            "consignee",
+            "mobile",
+            "address",
+            "goodsPrice",
+            "couponPrice",
+            "freightPrice",
+            'actualPrice',
+            "aftersaleStatus"
+        ]);
+
+        $detail['orderStatusText'] = OrderEnums::STATUS_TEXT_MAP[$order->order_status];
+        $detail['handleOption']    = $order->getCanHandleOptions();
+        $goodsList                 = $this->getOrderGoodsList($orderId);
+
+        $express = [];
+        if($order->isShipStatus){
+            $detail['expCode'] = $order->ship_channel;
+            $detail['expNo']   = $order->ship_sn;
+            $detail['expName'] = ExpressServices::getInstance()->getExpressName($order->ship_channel);
+            $express           = ExpressServices::getInstance()->getOrderTracesByJson($order->ship_channel,$order->ship_sn);
+        }
+
+        return [
+            'orderInfo'   => $detail,
+            'orderGoods'  => $goodsList,
+            'expressInfo' => $express,
+        ];
     }
 
     public function getOrderByUserIdAndId($userId, $orderId)

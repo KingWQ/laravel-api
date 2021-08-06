@@ -74,4 +74,13 @@ class OrderController extends WxController
 
         return $this->success();
     }
+
+    //订单详情
+    public function detail()
+    {
+        $orderId = $this->verifyId('orderId');
+        $detail = OrderServices::getInstance()->detail($this->userId(), $orderId);
+
+        return $this->success($detail);
+    }
 }
